@@ -12,12 +12,12 @@ EasyRec implements state of the art machine learning models used in common recom
 
 ### Run everywhere
 
-- [MaxCompute](https://help.aliyun.com/product/27797.html) / [DataScience](https://help.aliyun.com/document_detail/170836.html) / [DLC](https://www.alibabacloud.com/help/zh/doc-detail/165137.htm?spm=a2c63.p38356.b99.79.4c0734a4bVav8D) / Local
+- Local / [MaxCompute](https://help.aliyun.com/product/27797.html) / [DataScience](https://help.aliyun.com/document_detail/170836.html) / [DLC](https://www.alibabacloud.com/help/zh/doc-detail/165137.htm?spm=a2c63.p38356.b99.79.4c0734a4bVav8D)
 - TF1.12-1.15 / TF2.x / PAI-TF
 
 ### Diversified input data
 
-- MaxCompute Table
+- [MaxCompute Table](https://help.aliyun.com/document_detail/27819.html?spm=a2c4g.11186623.6.554.91d517bazK7nTF)
 - HDFS files
 - [OSS files](https://help.aliyun.com/product/31815.html?spm=5176.7933691.1309819.8.5bb52a66ZQOobj)
 - Kafka Streams
@@ -32,8 +32,8 @@ EasyRec implements state of the art machine learning models used in common recom
 ### It is smart
 
 - EarlyStop / Best Checkpoint Saver
-- Hyper Parameter Search / AutoFeatureCross
-- In development: NAS, Knowledge Distillation, MultiModal
+- [Hyper Parameter Search](automl/hpo_pai.md) / [AutoFeatureCross](automl/auto_cross_emr.md)
+- In development: NAS, Knowledge Distillation
 
 ### Large scale and easy deployment
 
@@ -44,10 +44,10 @@ EasyRec implements state of the art machine learning models used in common recom
 
 ### A variety of models
 
-- DeepFM / MultiTower / Deep Interest Network / DSSM / MMoE / ESMM
+- [DeepFM](models/deepfm.md) / [MultiTower](models/multi_tower.md) / [Deep Interest Network](models/din.md) / [DSSM](models/dssm.md) / [MMoE](models/mmoe.md) / [ESMM](models/esmm.md)
 - More models in development
 
 ### Easy to customize
 
-- Easy to implement customized models
+- Easy to implement [customized models](models/user_define.md)
 - Not need to care about data pipelines
