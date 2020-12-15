@@ -44,21 +44,6 @@ pre-commit run -a
 TEST_DEVICES=0,1 sh scripts/ci_test.sh
 ```
 
-#### Odps Test
-
-```bash
-TEMPDIR=/tmp python -m easy_rec.python.test.odps_run --oss_config ~/.ossutilconfig [--odps_config {ODPS_CONFIG} --algo_project {ALOG_PROJ}  --arn acs:ram::xxx:role/yyy TestPipelineOnOdps.*]
-```
-
-#### Test data
-
-If you add new data, please do the following to commit it to git-lfs before "git commit":
-
-```bash
-python git-lfs/git_lfs.py add data/test/new_data
-python git-lfs/git_lfs.py push
-```
-
 ### Document
 
 We support [markdown](https://guides.github.com/features/mastering-markdown/) format documents and
@@ -80,10 +65,4 @@ build pip package
 
 ```bash
 python setup.py sdist bdist_wheel
-```
-
-### Deploy
-
-```bash
-sh pai_jobs/deploy_ext.sh
 ```

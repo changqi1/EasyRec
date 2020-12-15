@@ -1,17 +1,5 @@
 # 自定义模型
 
-### 获取EasyRec源码
-
-```bash
-git clone git@gitlab.alibaba-inc.com:pai_biz_arch/easy-rec.git
-git submodule init
-git submodule update
-python git-lfs/git_lfs.py pull
-# 运行测试用例确保通过
-python -m easy_rec.python.test.run
-sh scripts/end2end_test.sh
-```
-
 ### 编写模型proto文件
 
 ```protobuf
@@ -161,14 +149,14 @@ class CustomModel(EasyRecModel):
             model_config, feature_configs, features, labels, is_training
         )
         """
-       use feature columns to build complex features from features(input)
-       use self._input_layer to build features from feature_configs:
-    """
+        use feature columns to build complex features from input
+        use self._input_layer to build features from feature_configs:
+        """
         self._wide_features, _ = self._input_layer(self._feature_dict, "wide")
         """
-      self._deep_features are a single tensor, where the all features are concatentated into one,
-      self._deep_feature_list is a list of tensors, each feature_config lead to one tensor.
-    """
+        self._deep_features are a single tensor, where the all features are concatentated into one,
+        self._deep_feature_list is a list of tensors, each feature_config lead to one tensor.
+        """
         self._deep_features, self._deep_feature_lst = self._input_layer(
             self._feature_dict, "deep"
         )
@@ -179,13 +167,12 @@ class CustomModel(EasyRecModel):
             self._feature_dict, "item"
         )
         """
-      The deep, user, item corresponds to feature_groups defined in model_config.feature_groups:
-        "deep", "user", "item" are the feature_group names.
-      It is suggested to use the feature_configs to build features.
-      But if the feature_configs could not satified your requirements, you can use tensorflow
-      functions to process the raw inputs in features.
-      ...
-    """
+        The deep, user, item corresponds to 3 feature_groups defined in model_config.feature_groups:
+          "deep", "user", "item" are the feature_group names.
+        It is suggested to use the feature_configs to build features.
+        But if the feature_configs could not satified your requirements, you can use tensorflow
+        functions to process the raw inputs in features.
+        """
 
         # do some other initializing work
         ...
@@ -226,14 +213,14 @@ class CustomModel(EasyRecModel):
 
 ### 测试
 
-#### 编写pipeline.config
+#### 编写samples/model_config/custom_model.config
 
 ```protobuf
 # 训练表和测试表，如果在PAI上，会被-Dtables参数覆盖
-train_input_path: "train_longonehot_4deepfm_20.csv"
-eval_input_path: "test_longonehot_4deepfm_20.csv"
+train_input_path: "data/test/tb_data/taobao_train_data"
+eval_input_path: "data/test/tb_data/taobao_test_data"
 # 模型保存路径
-model_dir: "experiment/custom_model_ctr/"
+model_dir: "experiments/custom_model_ctr/"
 
 # 数据相关的描述
 data_config {
@@ -290,16 +277,16 @@ model_config: {
 
 #### 增加测试数据到data/test/
 
-#### 增加测试用例到scripts/end2end\_test.sh
+#### 增加测试用例到scripts/ci\_test.sh
 
 ```bash
-python -m easy_rec.python.train_eval --pipeline_config_path pipeline.config
+python -m easy_rec.python.train_eval --pipeline_config_path samples/model_config/custom_model.config
 ```
 
 运行测试用例
 
 ```bash
-scripts/end2end_test.sh
+scripts/ci_test.sh
 ```
 
 确保所有用例都通过了
@@ -307,9 +294,7 @@ scripts/end2end_test.sh
 #### 提交代码
 
 ```shell
-python git-lfs/git_lfs.py add data/test/your_data_files
-python git-lfs/git_lfs.py push
-git add your_config_file your_code.py
-git commit -a -m "add new model xxx"
+git add pipeline.config your_code.py
+git commit -a -m "add custom model"
 git push origin your_branch
 ```

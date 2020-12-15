@@ -213,4 +213,4 @@ model_config:{
 
 ```
 
-使用el\_submit提交训练即可，请参照 [EMR Tutorial](https://yuque.antfin.com/pai/arch/zucdp3)。
+使用el\_submit提交训练即可，请参照 [EMR Tutorial](../quick_start/emr_tutorial.md)。
