@@ -10,8 +10,11 @@ logging.basicConfig(
     format='[%(levelname)s] %(asctime)s %(filename)s:%(lineno)d : %(message)s',
     level=logging.INFO)
 
-lookup_lib_path = 'libs/libkv_lookup.so'
-lookup_op = tf.load_op_library(lookup_lib_path)
+try:
+  lookup_lib_path = 'libs/libkv_lookup.so'
+  lookup_op = tf.load_op_library(lookup_lib_path)
+except Exception as ex:
+  pass
 
 if __name__ == '__main__':
   """Test saved model, an example:
