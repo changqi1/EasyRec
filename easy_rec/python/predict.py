@@ -36,7 +36,7 @@ def main(argv):
     logging.info('will save predict result to %s' % FLAGS.output_path)
     with tf.gfile.GFile(FLAGS.output_path, 'wb') as fout:
       for k in pred_result:
-        fout.write(str(k).replace("'", '"') + '\n')
+        fout.write(str(k).replace("u'", '"').replace("'",'"') + '\n')
 
 
 if __name__ == '__main__':

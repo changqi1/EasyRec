@@ -64,7 +64,8 @@ class Input(six.with_metaclass(_meta_type, object)):
       for input_name in fc.input_names:
         assert input_name in self._input_fields, 'invalid input_name in %s' % str(
             fc)
-        self._effective_fields.append(input_name)
+        if input_name not in self._effective_fields:
+          self._effective_fields.append(input_name)
     self._effective_fids = [
         self._input_fields.index(x) for x in self._effective_fields
     ]
@@ -120,13 +121,14 @@ class Input(six.with_metaclass(_meta_type, object)):
 
   def create_multi_placeholders(self):
     inputs = {}
-    for fid in self._effective_fids:
+    for fid in list(self._effective_fids):
       ftype = self._input_field_types[fid]
       tf_type = self.get_tf_type(ftype)
       input_name = self._input_fields[fid]
       finput = tf.placeholder(tf_type, [None], name='input_%d' % fid)
       inputs[input_name] = finput
-    features = self._preprocess(inputs)
+    features = { x : inputs[x] for x in inputs }
+    features = self._preprocess(features)
     return inputs, features
 
   def create_placeholders(self):
@@ -135,19 +137,20 @@ class Input(six.with_metaclass(_meta_type, object)):
         inputs_placeholder, self._data_config.separator,
         skip_empty=False).values
     input_vals = tf.reshape(
-        input_vals, [-1, len(self._input_fields) - 1], name='input_reshape')
+        input_vals, [-1, len(self._effective_fids)], name='input_reshape')
     features = {}
-    for fid in self._effective_fids:
+    effective_fids = list(set(self._effective_fids))
+    for tmp_id, fid in enumerate(effective_fids):
       ftype = self._input_field_types[fid]
       tf_type = self.get_tf_type(ftype)
       input_name = self._input_fields[fid]
       if tf_type in [tf.float32, tf.double, tf.int32, tf.int64]:
         features[input_name] = tf.string_to_number(
-            input_vals[:, fid - 1],
+            input_vals[:, tmp_id],
             tf_type,
             name='input_str_to_%s' % tf_type.name)
       else:
-        features[input_name] = input_vals[:, fid - 1]
+        features[input_name] = input_vals[:, tmp_id]
     features = self._preprocess(features)
     return {'features': inputs_placeholder}, features
 

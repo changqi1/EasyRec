@@ -5,6 +5,8 @@
 import json
 import logging
 import os
+import numpy as np
+import functools
 
 import tensorflow as tf
 
@@ -23,29 +25,67 @@ class ExportTest(tf.test.TestCase):
     test_utils.set_gpu_id(None)
 
   @RunAsSubprocess
-  def _predict_and_check(self, data_path, saved_model_dir, cmp_result):
+  def _predict_and_check(self, data_path, saved_model_dir, cmp_result, keys=['probs'],
+                         separator=',', tol=1e-4):
     predictor = Predictor(saved_model_dir)
     with open(data_path, 'r') as fin:
       inputs = []
       for line_str in fin:
         line_str = line_str.strip()
-        line_tok = line_str.split(',')
-        inputs.append(','.join(line_tok[1:]))
+        if len(predictor.input_names) > 1:
+          inputs.append(line_str.split(separator))
+        else:
+          inputs.append(line_str)
       output_res = predictor.predict(inputs, batch_size=32)
 
     for i in range(len(output_res)):
-      prob0 = output_res[i]['probs']
-      prob1 = cmp_result[i]['probs']
-      self.assertAllClose(prob0, prob1, atol=1e-4)
+      for key in keys:
+        val0 = output_res[i][key]
+        val1 = cmp_result[i][key]
+        assert np.abs(val0-val1) < tol, \
+            "too much difference: %.6f for %s, tol=%.6f" \
+            % (np.abs(val0-val1), key, tol)
 
-  def test_export(self):
+  def _extract_data(self, input_path, output_path, offset=1, separator=','):
+    with open(input_path, 'r') as fin:
+      with open(output_path, 'w') as fout:
+        for line_str in fin:
+          line_str = line_str.strip()
+          line_toks = line_str.split(separator)
+          if offset > 0:
+            line_toks = line_toks[offset:]
+          fout.write('%s\n' % (separator.join(line_toks)))
+
+  def _extract_rtp_data(self, input_path, output_path, separator=';'):
+    with open(input_path, 'r') as fin:
+      with open(output_path, 'w') as fout:
+        for line_str in fin:
+          line_str = line_str.strip()
+          line_toks = line_str.split(separator)
+          fout.write('%s\n' % line_toks[-1])
+
+  def test_multi_tower(self):
+    self._export_test('samples/model_config/multi_tower_export.config',
+        self._extract_data)
+
+  def test_mmoe(self):
+    self._export_test('samples/model_config/mmoe_on_taobao.config',
+        functools.partial(self._extract_data, offset=2),
+        keys=['probs_ctr', 'probs_cvr'])
+
+  def test_fg(self):
+    self._export_test('samples/model_config/taobao_fg.config',
+        self._extract_rtp_data, separator='')
+
+  def _export_test(self, pipeline_config_path, extract_data_func=None, 
+                   separator=',', keys=['probs']):
     test_dir = test_utils.get_tmp_dir()
     logging.info('test dir: %s' % test_dir)
 
     # prepare model
     self.assertTrue(
         test_utils.test_single_train_eval(
-            'samples/model_config/multi_tower_export.config',
+            pipeline_config_path,
             test_dir=test_dir))
     test_utils.set_gpu_id(None)
 
@@ -54,7 +94,10 @@ class ExportTest(tf.test.TestCase):
     config_path_multi = os.path.join(test_dir, 'pipeline_v2.config')
     pipeline_config = config_util.get_configs_from_pipeline_file(
         config_path_single)
-    pipeline_config.export_config.multi_placeholder = False
+    if pipeline_config.export_config.multi_placeholder:
+      config_path_single, config_path_multi = config_path_multi, config_path_single
+    pipeline_config.export_config.multi_placeholder =\
+        not pipeline_config.export_config.multi_placeholder
     config_util.save_pipeline_config(pipeline_config, test_dir,
                                      'pipeline_v2.config')
 
@@ -88,9 +131,15 @@ class ExportTest(tf.test.TestCase):
         line_str = line_str.strip()
         cmp_result.append(json.loads(line_str))
 
-    test_data_path = 'data/test/export/data.csv'
-    self._predict_and_check(test_data_path, export_dir_single, cmp_result)
-    self._predict_and_check(test_data_path, export_dir_multi, cmp_result)
+    test_data_path = pipeline_config.eval_input_path 
+    if extract_data_func is not None:
+      tmp_data_path = os.path.join(test_dir, 'pred_input_data')
+      extract_data_func(test_data_path, tmp_data_path)
+      test_data_path = tmp_data_path
+    self._predict_and_check(test_data_path, export_dir_single,
+        cmp_result, keys=keys, separator=separator)
+    self._predict_and_check(test_data_path, export_dir_multi,
+        cmp_result, keys=keys, separator=separator)
     test_utils.clean_up(test_dir)
 
 
