@@ -19,6 +19,7 @@ Welcome to easy_rec's documentation!
 
    feature/data
    feature/feature
+   feature/rtp_fg
 
 .. toctree::
    :maxdepth: 3
@@ -29,6 +30,21 @@ Welcome to easy_rec's documentation!
    models/multi_target
    models/user_define
 
+.. toctree::
+   :maxdepth: 2
+   :caption: TRAIN & EVAL & EXPORT
+
+   train
+   eval
+   export
+   kd
+
+.. toctree::
+   :maxdepth: 2
+   :caption: PREDICT
+
+   predict/MaxCompute离线预测
+   predict/OnlinePrediction
 
 .. toctree::
    :maxdepth: 2

@@ -41,6 +41,7 @@ model_config:{
         hidden_units: [256, 128, 64, 32]
       }
     }
+    simi_func: INNER_PRODUCT
     l2_regularization: 1e-6
   }
   embedding_regularization: 5e-5
@@ -54,11 +55,16 @@ model_config:{
   - dnn: deep part的参数配置
     - hidden\_units: dnn每一层的channel数目，即神经元的数目
   - id: 指定user\_id/item\_id列
+- simi\_func: 向量相似度函数，默认COSINE
 - embedding\_regularization: 对embedding部分加regularization，防止overfit
 
 ### 示例Config
 
 [DSSM\_demo.config](https://easy-rec.oss-cn-hangzhou.aliyuncs.com/config/dssm.config)
+
+### 效果评估
+
+[效果评估](https://easyrec.oss-cn-beijing.aliyuncs.com/docs/recall_eval.pdf)
 
 ### 参考论文
 

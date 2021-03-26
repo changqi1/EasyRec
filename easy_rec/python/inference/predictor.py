@@ -166,12 +166,23 @@ class PredictorImpl(object):
           # each input_info is a tuple of input_id, name, data_type
           input_info = []
           if len(inputs.items()) > 1:
-            for name, tensor in inputs.items():
+            for gid, item in enumerate(inputs.items()):
+              name, tensor = item
               logging.info('Load input binding: %s -> %s' % (name, tensor.name))
               input_name = tensor.name
               input_name, _ = input_name.split(':')
-              input_id = input_name.split('_')[-1]
-              input_id = int(input_id)
+              try:
+                input_id = input_name.split('_')[-1]
+                input_id = int(input_id)
+              except Exception:
+                # support for models that are not exported by easy_rec
+                # in which case, the order of inputs may not be the
+                # same as they are defined, thereforce, list input
+                # could not be supported, only dict input could be supported
+                logging.warning(
+                    'could not determine input_id from input_name: %s' %
+                    input_name)
+                input_id = gid
               input_info.append((input_id, name, tensor.dtype))
               self._inputs_map[name] = self._graph.get_tensor_by_name(
                   tensor.name)

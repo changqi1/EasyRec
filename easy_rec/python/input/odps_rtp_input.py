@@ -2,6 +2,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import logging
 
+import numpy as np
 import tensorflow as tf
 
 from easy_rec.python.input.input import Input
@@ -45,11 +46,29 @@ class OdpsRTPInput(Input):
     ]
     # assume that the last field is the generated feature column
     print('field_delim = %s' % self._data_config.separator)
-    fields = tf.decode_csv(
-        fields[-1],
-        record_defaults=record_defaults,
-        field_delim=self._data_config.separator,
-        name='decode_csv')
+    fields = tf.string_split(
+        fields[-1], self._data_config.separator, skip_empty=False)
+    tmp_fields = tf.reshape(fields.values, [-1, len(record_defaults)])
+    fields = []
+    for i in range(len(record_defaults)):
+      if type(record_defaults[i]) == int:
+        fields.append(
+            tf.string_to_number(
+                tmp_fields[:, i], tf.int64, name='field_as_int_%d' % i))
+      elif type(record_defaults[i]) in [float, np.float32, np.float64]:
+        fields.append(
+            tf.string_to_number(
+                tmp_fields[:, i], tf.float32, name='field_as_flt_%d' % i))
+      elif type(record_defaults[i]) in [str, type(u''), bytes]:
+        fields.append(tmp_fields[:, i])
+      elif type(record_defaults[i]) == bool:
+        fields.append(
+            tf.logical_or(
+                tf.equal(tmp_fields[:, i], 'True'),
+                tf.equal(tmp_fields[:, i], 'true')))
+      else:
+        assert 'invalid types: %s' % str(type(record_defaults[i]))
+
     field_keys = [x for x in self._input_fields if x not in self._label_fields]
     effective_fids = [field_keys.index(x) for x in self._effective_fields]
     inputs = {field_keys[x]: fields[x] for x in effective_fids}
@@ -60,7 +79,7 @@ class OdpsRTPInput(Input):
 
   def _build(self, mode, params):
     if type(self._input_path) != list:
-      self._input_path = [self._input_path]
+      self._input_path = [x for x in self._input_path.split(',')]
 
     record_defaults = [
         self.get_type_defaults(t, v)

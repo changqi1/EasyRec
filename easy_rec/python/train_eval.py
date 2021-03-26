@@ -2,6 +2,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import json
 import logging
+import os
 
 import tensorflow as tf
 
@@ -32,7 +33,7 @@ tf.app.flags.DEFINE_string(
     None,
     help='edit pipeline config str, example: {"model_dir":"experiments/",'
     '"feature_config[0].boundaries":[4,5,6,7]}')
-
+tf.app.flags.DEFINE_string('odps_config', None, help='odps config path')
 FLAGS = tf.app.flags.FLAGS
 
 
@@ -43,6 +44,8 @@ def main(argv):
     if FLAGS.model_dir:
       pipeline_config.model_dir = FLAGS.model_dir
       logging.info('update model_dir to %s' % pipeline_config.model_dir)
+    if FLAGS.odps_config:
+      os.environ['ODPS_CONFIG_FILE_PATH'] = FLAGS.odps_config
     if FLAGS.hpo_param_path:
       with tf.gfile.GFile(FLAGS.hpo_param_path, 'r') as fin:
         hpo_config = json.load(fin)

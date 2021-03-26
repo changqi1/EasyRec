@@ -2,6 +2,7 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 
 import logging
+import os
 
 import six
 import tensorflow as tf
@@ -26,10 +27,13 @@ tf.app.flags.DEFINE_string(
     'eval_input_path', None, 'eval data path, if specified will '
     'override pipeline_config.eval_input_path')
 tf.app.flags.mark_flag_as_required('pipeline_config_path')
+tf.app.flags.DEFINE_string('odps_config', None, help='odps config path')
 FLAGS = tf.app.flags.FLAGS
 
 
 def main(argv):
+  if FLAGS.odps_config:
+    os.environ['ODPS_CONFIG_FILE_PATH'] = FLAGS.odps_config
   eval_result = evaluate(FLAGS.pipeline_config_path, FLAGS.checkpoint_path,
                          FLAGS.eval_input_path)
   for key in sorted(eval_result):

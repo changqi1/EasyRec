@@ -510,6 +510,8 @@ ExcelConfig比Config更加简明
 
 ### 参考手册
 
-[EasyRecConfig参考手册](../proto.html)
-[TF on EMR参考手册](https://help.aliyun.com/document_detail/93031.html?spm=a2c4g.11186623.6.769.586c73a4PXSmHi)
-[DataScience集群手册](https://help.aliyun.com/document_detail/170836.html?spm=a2c4g.11186623.6.867.352e53c5yP1ecR)
+- [EasyRecConfig参考手册](../reference.md)
+
+- [TF on EMR参考手册](https://help.aliyun.com/document_detail/93031.html?spm=a2c4g.11186623.6.769.586c73a4PXSmHi)
+
+- [DataScience集群手册](https://help.aliyun.com/document_detail/170836.html?spm=a2c4g.11186623.6.867.352e53c5yP1ecR)

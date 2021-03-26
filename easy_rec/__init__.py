@@ -4,6 +4,8 @@ import logging
 import os
 import sys
 
+import tensorflow as tf
+
 from easy_rec.version import __version__
 
 curr_dir, _ = os.path.split(__file__)
@@ -22,6 +24,12 @@ print('easy_rec version: %s' % __version__)
 print('Usage: easy_rec.help()')
 
 _global_config = {}
+
+ops_dir = os.path.join(curr_dir, 'python/ops')
+if tf.__version__.startswith('1.12'):
+  ops_dir = os.path.join(ops_dir, '1.12')
+elif tf.__version__.startswith('1.15'):
+  ops_dir = os.path.join(ops_dir, '1.15')
 
 
 def help():

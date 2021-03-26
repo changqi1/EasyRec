@@ -4,6 +4,8 @@
 
 针对简单的多任务模型,所有任务共享特征和embedding,但是针对每个任务使用单独的Task Tower,任务之间相互独立
 
+![simple_multi_task.png](../../images/models/simple_multi_task.png)
+
 ### 配置说明
 
 ```protobuf

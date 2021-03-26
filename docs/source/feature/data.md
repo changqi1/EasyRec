@@ -45,6 +45,7 @@ input\_fields字段:
 - default\_val，默认是空，**注意默认值都是设置成字符串**
   - 如果input是INT类型，并且默认值是6，那么default\_val是"6";
   - 如果input是FLOAT类型，并且默认值是0.5，那么default\_val是"0.5";
+- input\_dim, 目前仅适用于RawFeature类型，可以指定多维数据，如一个图片的embedding vector.
 
 ```protobuf
   input_fields: {
@@ -66,13 +67,13 @@ input\_fields字段:
 - 默认值是CSVInput，表示数据格式是CSV，注意要配合separator使用
 - 如果在Odps上，应使用OdpsInputV2
 
-#### separator:
+### separator:
 
 - 使用csv格式的输入需要指定separator作为列之间的分隔符
 - 默认是半角逗号","
 - 可使用不可见字符作为分隔符（二进制分隔符），如'\\001', '\\002'等
 
-#### label\_fields
+### label\_fields
 
 - label相关的列名，至少设置一个，可以根据算法需要设置多个，如多目标算法
 

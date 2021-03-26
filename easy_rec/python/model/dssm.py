@@ -1,23 +1,19 @@
 # -*- encoding:utf-8 -*-
 # Copyright (c) Alibaba, Inc. and its affiliates.
-import logging
-
 import tensorflow as tf
 
-from easy_rec.python.compat import regularizers
+from easy_rec.python.builders import loss_builder
 from easy_rec.python.layers import dnn
 from easy_rec.python.model.easy_rec_model import EasyRecModel
 from easy_rec.python.protos.dssm_pb2 import DSSM as DSSMConfig
 from easy_rec.python.protos.loss_pb2 import LossType
+from easy_rec.python.protos.simi_pb2 import Similarity
 from easy_rec.python.utils.proto_util import copy_obj
 
 if tf.__version__ >= '2.0':
-  losses = tf.compat.v1.losses
-  metrics = tf.compat.v1.metrics
   tf = tf.compat.v1
-else:
-  losses = tf.losses
-  metrics = tf.metrics
+losses = tf.losses
+metrics = tf.metrics
 
 
 class DSSM(EasyRecModel):
@@ -38,17 +34,11 @@ class DSSM(EasyRecModel):
     assert isinstance(self._model_config, DSSMConfig)
 
     if self._labels is not None:
-      self._labels = list(self._labels.values())
+      labels = list(self._labels.values())
       if self._loss_type == LossType.CLASSIFICATION:
-        if tf.__version__ >= '2.0':
-          self._labels[0] = tf.cast(self._labels[0], tf.int64)
-        else:
-          self._labels[0] = tf.to_int64(self._labels[0])
+        self._label = tf.cast(labels[0], tf.int64)
       elif self._loss_type == LossType.L2_LOSS:
-        if tf.__version__ >= '2.0':
-          self._labels[0] = tf.cast(self._labels[0], tf.float32)
-        else:
-          self._labels[0] = tf.to_float(self._labels[0])
+        self._label = tf.cast(labels[0], tf.float32)
 
     if self._loss_type == LossType.CLASSIFICATION:
       assert self._num_class == 1
@@ -61,14 +51,6 @@ class DSSM(EasyRecModel):
     self.item_tower = copy_obj(self._model_config.item_tower)
     self.item_tower_feature, _ = self._input_layer(self._feature_dict, 'item')
     self.item_id = self.item_tower.id
-
-    regularizers.apply_regularization(
-        self._emb_reg, weights_list=[self.user_tower_feature])
-    regularizers.apply_regularization(
-        self._emb_reg, weights_list=[self.item_tower_feature])
-
-    self._l2_reg = regularizers.l2_regularizer(
-        self._model_config.l2_regularization)
 
   def sim(self, user_emb, item_emb):
     user_item_sim = tf.reduce_sum(
@@ -102,7 +84,7 @@ class DSSM(EasyRecModel):
         kernel_regularizer=self._l2_reg,
         name='item_dnn/dnn_%d' % (num_item_dnn_layer - 1))
 
-    if self._loss_type == LossType.CLASSIFICATION:
+    if self._loss_type == LossType.CLASSIFICATION and self._model_config.simi_func == Similarity.COSINE:
       user_tower_emb = self.norm(user_tower_emb)
       item_tower_emb = self.norm(item_tower_emb)
 
@@ -121,7 +103,8 @@ class DSSM(EasyRecModel):
     y_pred = tf.reshape(y_pred, [-1])
 
     if self._loss_type == LossType.CLASSIFICATION:
-      self._prediction_dict['logits'] = tf.nn.sigmoid(y_pred)
+      self._prediction_dict['logits'] = y_pred
+      self._prediction_dict['probs'] = tf.nn.sigmoid(y_pred)
     else:
       self._prediction_dict['y'] = y_pred
 
@@ -133,16 +116,22 @@ class DSSM(EasyRecModel):
 
   def build_loss_graph(self):
     if self._loss_type == LossType.CLASSIFICATION:
-      logging.info('log loss is used')
-      loss = losses.log_loss(self._labels[0], self._prediction_dict['logits'])
-      self._loss_dict['cross_entropy_loss'] = loss
+      pred = self._prediction_dict['logits']
+      loss_name = 'cross_entropy_loss'
     elif self._loss_type == LossType.L2_LOSS:
-      logging.info('l2 loss is used')
-      loss = tf.reduce_mean(
-          tf.square(self._labels[0] - self._prediction_dict['y']))
-      self._loss_dict['l2_loss'] = loss
+      pred = self._prediction_dict['y']
+      loss_name = 'l2_loss'
     else:
       raise ValueError('invalid loss type: %s' % str(self._loss_type))
+
+    self._loss_dict[loss_name] = loss_builder.build(
+        self._loss_type, label=self._label, pred=pred)
+
+    # build kd loss
+    kd_loss_dict = loss_builder.build_kd_loss(self.kd, self._prediction_dict,
+                                              self._labels)
+    self._loss_dict.update(kd_loss_dict)
+
     return self._loss_dict
 
   def build_metric_graph(self, eval_config):
@@ -150,26 +139,26 @@ class DSSM(EasyRecModel):
     for metric in eval_config.metrics_set:
       if metric.WhichOneof('metric') == 'auc':
         assert self._loss_type == LossType.CLASSIFICATION
-        metric_dict['auc'] = metrics.auc(self._labels[0],
-                                         self._prediction_dict['logits'])
+        metric_dict['auc'] = metrics.auc(self._label,
+                                         self._prediction_dict['probs'])
       elif metric.WhichOneof('metric') == 'recall_at_topk':
         assert self._loss_type == LossType.CLASSIFICATION
         metric_dict['recall_at_topk'] = metrics.recall_at_k(
-            self._labels[0], self._prediction_dict['logits'],
+            self._label, self._prediction_dict['probs'],
             metric.recall_at_topk.topk)
       elif metric.WhichOneof('metric') == 'mean_absolute_error':
         assert self._loss_type == LossType.L2_LOSS
         metric_dict['mean_absolute_error'] = metrics.mean_absolute_error(
-            self._labels[0], self._prediction_dict['y'])
+            self._label, self._prediction_dict['y'])
       elif metric.WhichOneof('metric') == 'accuracy':
         assert self._loss_type == LossType.CLASSIFICATION
         metric_dict['accuracy'] = metrics.accuracy(
-            self._labels[0], self._prediction_dict['logits'])
+            self._label, self._prediction_dict['probs'])
     return metric_dict
 
   def get_outputs(self):
     if self._loss_type == LossType.CLASSIFICATION:
-      return ['logits', 'user_emb', 'item_emb']
+      return ['logits', 'probs', 'user_emb', 'item_emb']
     elif self._loss_type == LossType.L2_LOSS:
       return ['y', 'user_emb', 'item_emb']
     else:

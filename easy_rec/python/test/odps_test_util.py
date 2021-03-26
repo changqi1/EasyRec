@@ -10,7 +10,7 @@ import oss2
 
 class OdpsOSSConfig:
 
-  def __init__(self):
+  def __init__(self, script_path='./samples/odps_script'):
     self.time_stamp = int(time.time())
     temp_dir = os.environ.get('TEST_DIR', '/tmp')
     self.exp_dir = 'easy_rec_odps_test_%d' % self.time_stamp
@@ -20,7 +20,7 @@ class OdpsOSSConfig:
     # public buckets with readyonly access
     self.ali_bucket_endpoint = 'http://oss-cn-beijing.aliyuncs.com'
     self.ali_bucket_name = 'easyrec'
-    self.script_path = './samples/odps_script'
+    self.script_path = script_path
     # read only access
     self.ali_oss_key = 'LTAI4GHNdHdXvYQQW7NyHS8Y'
     self.ali_oss_secret = 'dOm1BrTGIVjmZwUnRFIapZreOD03Gw'
@@ -31,7 +31,7 @@ class OdpsOSSConfig:
     self.arn = 'acs:ram::xxx:role/aliyunodpspaidefaultrole'
     self.bucket_name = ''
 
-    self.odpscmd_path = 'odpscmd'
+    self.odpscmd_path = os.environ.get('ODPS_CMD_PATH', 'odpscmd')
     self.odps_config_path = ''
     # input table project name replace {ODPS_PROJ_NAME} in
     # samples/odps_script:

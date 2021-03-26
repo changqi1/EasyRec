@@ -19,7 +19,7 @@
 ### 安装包
 
 ```bash
-pip install http://easy-rec.oss-cn-hangzhou.aliyuncs.com/releases/easy_rec-20200922-py2.py3-none-any.whl
+pip install -U https://easy-rec.oss-cn-hangzhou.aliyuncs.com/releases/easy_rec-0.1.0-py2.py3-none-any.whl
 ```
 
 ### 启动命令:
@@ -280,4 +280,4 @@ model_config:{
 
 #### 参考手册
 
-[EasyRecConfig参考手册](../proto.html)
+[EasyRecConfig参考手册](../reference.md)

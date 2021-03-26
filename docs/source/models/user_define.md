@@ -92,7 +92,7 @@ sh scripts/gen_proto.sh
   - model\_config.feature\_groups: 特征组，如DeepFM包含deep组和wide组，多塔算法包含user组、item组、combo组等
 - feature\_configs: feature column配置，使用self.\_input\_layer可以获得经过feature\_column处理过的特征
 - features: 原始输入
-- labels: 样本的label
+- labels: 样本的label, 如果estimator的mode是predict或者export时, labels为None, 此时build\_loss\_graph不会被调用
 - is\_training: 是否是训练，其它状态(评估/预测)。
 
 #### 前向函数: build\_predict\_graph
@@ -213,10 +213,10 @@ class CustomModel(EasyRecModel):
 
 ### 测试
 
-#### 编写samples/model_config/custom_model.config
+#### 编写samples/model\_config/custom\_model.config
 
 ```protobuf
-# 训练表和测试表，如果在PAI上，会被-Dtables参数覆盖
+# 训练数据和测试文件路径, 支持多个文件，匹配规则参考glob
 train_input_path: "data/test/tb_data/taobao_train_data"
 eval_input_path: "data/test/tb_data/taobao_test_data"
 # 模型保存路径
@@ -275,26 +275,46 @@ model_config: {
 }
 ```
 
-#### 增加测试数据到data/test/
+#### 测试
 
-#### 增加测试用例到scripts/ci\_test.sh
+增加测试数据到data/test/
 
 ```bash
 python -m easy_rec.python.train_eval --pipeline_config_path samples/model_config/custom_model.config
 ```
 
-运行测试用例
+增加测试用例到easy\_rec/python/test/train\_eval\_test.py
+
+```python
+  def test_custom_model(self):
+    self._success = test_utils.test_single_train_eval(
+        'samples/model_config/custom_model.config',
+        self._test_dir)
+    self.assertTrue(self._success)
+
+```
+
+运行CustomModel测试用例
+
+```bash
+python -m easy_rec.python.test.train_eval_test TrainEvalTest.test_custom_model
+```
+
+运行所有测试用例
 
 ```bash
 scripts/ci_test.sh
 ```
 
-确保所有用例都通过了
-
 #### 提交代码
 
 ```shell
+git lfs track data/test/
 git add pipeline.config your_code.py
 git commit -a -m "add custom model"
 git push origin your_branch
 ```
+
+#### 参考
+
+打包、发布[开发指南](../develop.md)

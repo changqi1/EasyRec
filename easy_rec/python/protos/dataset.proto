@@ -18,6 +18,7 @@ message DatasetConfig {
         required string input_name = 1;
         required FieldType input_type = 2 [default = STRING];
         optional string default_val = 3;
+        optional uint32 input_dim = 4 [default=1];
     }
 
     // set auto_expand_input_fields to true to
@@ -28,6 +29,13 @@ message DatasetConfig {
     // For multiple target models such as MMOE
     // multiple label_fields will be set.
     repeated string label_fields = 4;
+
+    // label separator
+    repeated string label_sep = 41;
+
+    // label dimensions which need to be set when there
+    // are labels have dimension > 1
+    repeated uint32 label_dim = 42;
 
     // whether to shuffle data
     optional bool shuffle = 5 [default = true];
@@ -56,6 +64,7 @@ message DatasetConfig {
         OdpsInput = 2;
         // odps input, used on pai
         OdpsInputV2 = 3;
+        OdpsInputV3 = 9;
         RTPInput = 4;
         RTPInputV2 = 5;
         OdpsRTPInput = 6;

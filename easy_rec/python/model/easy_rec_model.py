@@ -9,7 +9,6 @@ import six
 import tensorflow as tf
 
 from easy_rec.python.compat import regularizers
-from easy_rec.python.layers import embed_input_layer
 from easy_rec.python.layers import input_layer
 from easy_rec.python.utils import estimator_utils
 from easy_rec.python.utils import restore_filter
@@ -36,11 +35,11 @@ class EasyRecModel(six.with_metaclass(_meta_type, object)):
     self._is_training = is_training
     self._feature_dict = features
 
-    self._feature_configs = feature_configs
-
-    self.build_input_layer(model_config, feature_configs)
-
     self._emb_reg = regularizers.l2_regularizer(self.embedding_regularization)
+    self._l2_reg = regularizers.l2_regularizer(self.l2_regularization)
+
+    self._feature_configs = feature_configs
+    self.build_input_layer(model_config, feature_configs)
 
     self._labels = labels
     self._prediction_dict = {}
@@ -50,15 +49,32 @@ class EasyRecModel(six.with_metaclass(_meta_type, object)):
   def embedding_regularization(self):
     return self._base_model_config.embedding_regularization
 
+  @property
+  def kd(self):
+    return self._base_model_config.kd
+
+  @property
+  def l2_regularization(self):
+    model_config = getattr(self._base_model_config,
+                           self._base_model_config.WhichOneof('model'))
+    l2_regularization = 0.0
+    if hasattr(model_config, 'dense_regularization') and \
+       model_config.HasField('dense_regularization'):
+      # backward compatibility
+      tf.logging.warn(
+          'dense_regularization is deprecated, please use l2_regularization')
+      l2_regularization = model_config.dense_regularization
+    elif hasattr(model_config, 'l2_regularization'):
+      l2_regularization = model_config.l2_regularization
+    return l2_regularization
+
   def build_input_layer(self, model_config, feature_configs):
-    if feature_configs is not None:
-      self._input_layer = input_layer.InputLayer(
-          feature_configs,
-          model_config.feature_groups,
-          use_embedding_variable=model_config.use_embedding_variable)
-    else:
-      self._input_layer = embed_input_layer.EmbedInputLayer(
-          model_config.feature_groups)
+    self._input_layer = input_layer.InputLayer(
+        feature_configs,
+        model_config.feature_groups,
+        use_embedding_variable=model_config.use_embedding_variable,
+        embedding_regularizer=self._emb_reg,
+        kernel_regularizer=self._l2_reg)
 
   @abstractmethod
   def build_predict_graph(self):
@@ -103,8 +119,8 @@ class EasyRecModel(six.with_metaclass(_meta_type, object)):
     name2var_map = self._get_restore_vars(ckpt_var_map_path)
     logging.info('start to restore from %s' % ckpt_path)
 
-    if tf.gfile.IsDirectory(ckpt_path):
-      ckpt_path = tf.train.latest_checkpoint(ckpt_path)
+    if ckpt_path.endswith('/') or tf.gfile.IsDirectory(ckpt_path + '/'):
+      ckpt_path = estimator_utils.latest_checkpoint(ckpt_path)
       print('ckpt_path is model_dir,  will use the latest checkpoint: %s' %
             ckpt_path)
 

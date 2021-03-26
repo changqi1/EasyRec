@@ -283,4 +283,4 @@ model_config:{
 
 #### 配置参考手册
 
-[EasyRecConfig参考手册](../proto.html)
+[EasyRecConfig参考手册](../reference.md)

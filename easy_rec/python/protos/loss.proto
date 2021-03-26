@@ -5,4 +5,6 @@ enum LossType {
     CLASSIFICATION = 0;
     L2_LOSS = 1;
     SIGMOID_L2_LOSS = 2;
+    // crossentropy loss/log loss
+    CROSS_ENTROPY_LOSS = 3;
 }

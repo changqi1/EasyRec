@@ -4,7 +4,6 @@ import logging
 
 import tensorflow as tf
 
-from easy_rec.python.compat import regularizers
 from easy_rec.python.layers import dnn
 from easy_rec.python.model.multi_task_model import MultiTaskModel
 from easy_rec.python.protos.esmm_pb2 import ESMM as ESMMConfig
@@ -42,8 +41,6 @@ class ESMM(MultiTaskModel):
     else:
       group_feature, _ = self._input_layer(self._feature_dict, 'all')
       self._group_features.append(group_feature)
-    regularizers.apply_regularization(
-        self._emb_reg, weights_list=self._group_features)
 
     # This model only supports two tasks (cvr+ctr or playtime+ctr).
     # In order to be consistent with the paper,
@@ -56,9 +53,6 @@ class ESMM(MultiTaskModel):
         'ctr tower must be binary classification.'
     for task_tower_cfg in self._task_towers:
       assert task_tower_cfg.num_class == 1, 'Does not support multiclass classification problem'
-
-    self._l2_reg = regularizers.l2_regularizer(
-        self._model_config.l2_regularization)
 
   def build_loss_graph(self):
     """Build loss graph.
