@@ -3,3 +3,4 @@ pandas
 psutil
 scikit-learn
 xlrd >= 0.9.0
+tensorflow == 2.3

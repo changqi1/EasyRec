@@ -79,3 +79,4 @@ EasyRec致力于成为容易上手的工业界深度学习推荐算法框架，�
 
 - [Develop](docs/source/develop.md)
 
+- [Doc](https://easyrec.readthedocs.io/en/latest/)
