@@ -42,7 +42,7 @@ class SimpleMultiTask(MultiTaskModel):
       task_fea = task_dnn(self._features)
       task_output = tf.layers.dense(
           inputs=task_fea,
-          units=self._num_class,
+          units=task_tower_cfg.num_class,
           kernel_regularizer=self._l2_reg,
           name='dnn_output_%d' % i)
       tower_outputs[tower_name] = task_output

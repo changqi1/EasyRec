@@ -163,7 +163,8 @@ class TestPipelineOnOdps(tf.test.TestCase):
         'embedding_variable/create_table.sql',
     ]
     test_files = [
-        'embedding_variable/train.sql', 'embedding_variable/export.sql'
+        'embedding_variable/train.sql', 'embedding_variable/train_work_que.sql',
+        'embedding_variable/export.sql'
     ]
     end_file = ['embedding_variable/drop_table.sql']
     tot = OdpsTest(start_files, test_files, end_file, odps_oss_config)

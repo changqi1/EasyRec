@@ -1,8 +1,10 @@
 # -*- encoding:utf-8 -*-
 # Copyright (c) Alibaba, Inc. and its affiliates.
 import logging
+import os
 
 import tensorflow as tf
+from tensorflow.python.lib.io import file_io
 
 from easy_rec.python.main import export
 
@@ -34,7 +36,7 @@ tf.app.flags.DEFINE_integer('redis_write_kv', 1,
 tf.app.flags.DEFINE_string('asset_files', '', 'more files to add to asset')
 tf.app.flags.DEFINE_bool('verbose', False, 'print more debug information')
 
-tf.app.flags.mark_flag_as_required('pipeline_config_path')
+tf.app.flags.DEFINE_string('model_dir', None, help='will update the model_dir')
 tf.app.flags.mark_flag_as_required('export_dir')
 FLAGS = tf.app.flags.FLAGS
 
@@ -58,7 +60,17 @@ def main(argv):
   else:
     redis_params['redis_write_kv'] = True
 
-  export(FLAGS.export_dir, FLAGS.pipeline_config_path, FLAGS.checkpoint_path,
+  assert FLAGS.model_dir or FLAGS.pipeline_config_path, 'At least one of model_dir and pipeline_config_path exists.'
+  if FLAGS.model_dir:
+    pipeline_config_path = os.path.join(FLAGS.model_dir, 'pipeline.config')
+    if file_io.file_exists(pipeline_config_path):
+      logging.info('update pipeline_config_path to %s' % pipeline_config_path)
+    else:
+      pipeline_config_path = FLAGS.pipeline_config_path
+  else:
+    pipeline_config_path = FLAGS.pipeline_config_path
+
+  export(FLAGS.export_dir, pipeline_config_path, FLAGS.checkpoint_path,
          FLAGS.asset_files, FLAGS.verbose, **redis_params)
 
 

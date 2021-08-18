@@ -20,6 +20,11 @@ from easy_rec.python.main import evaluate  # isort:skip  # noqa: E402
 from easy_rec.python.main import export  # isort:skip  # noqa: E402
 from easy_rec.python.main import train_and_evaluate  # isort:skip  # noqa: E402
 
+try:
+  import tensorflow_io.oss
+except Exception:
+  pass
+
 print('easy_rec version: %s' % __version__)
 print('Usage: easy_rec.help()')
 

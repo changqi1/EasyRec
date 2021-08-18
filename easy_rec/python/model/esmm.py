@@ -66,8 +66,10 @@ class ESMM(MultiTaskModel):
     ctr_label_name = self._label_name_dict[ctr_tower_name]
     if self._cvr_tower_cfg.loss_type == LossType.CLASSIFICATION:
       ctcvr_label = self._labels[cvr_label_name] * self._labels[ctr_label_name]
-      cvr_loss = losses.log_loss(ctcvr_label,
-                                 self._prediction_dict['probs_ctcvr'])
+      cvr_loss = losses.log_loss(
+          ctcvr_label,
+          self._prediction_dict['probs_ctcvr'],
+          weights=self._sample_weight)
       # The weight defaults to 1.
       self._loss_dict['weighted_cross_entropy_loss_%s' %
                       cvr_tower_name] = self._cvr_tower_cfg.weight * cvr_loss
@@ -78,13 +80,16 @@ class ESMM(MultiTaskModel):
       ctcvr_label = self._labels[cvr_label_name] * tf.cast(
           self._labels[ctr_label_name], cvr_dtype)
       cvr_loss = tf.losses.mean_squared_error(
-          labels=ctcvr_label, predictions=self._prediction_dict['y_ctcvr'])
+          labels=ctcvr_label,
+          predictions=self._prediction_dict['y_ctcvr'],
+          weights=self._sample_weight)
       self._loss_dict['weighted_l2_loss_%s' %
                       cvr_tower_name] = self._cvr_tower_cfg.weight * cvr_loss
 
     ctr_loss = losses.sigmoid_cross_entropy(
         self._labels[ctr_label_name],
-        self._prediction_dict['logits_%s' % ctr_tower_name])
+        self._prediction_dict['logits_%s' % ctr_tower_name],
+        weights=self._sample_weight)
     self._loss_dict['weighted_cross_entropy_loss_%s' %
                     ctr_tower_name] = self._ctr_tower_cfg.weight * ctr_loss
     return self._loss_dict

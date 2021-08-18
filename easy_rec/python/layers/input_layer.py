@@ -6,6 +6,7 @@ from easy_rec.python.compat import regularizers
 from easy_rec.python.compat.feature_column import feature_column
 from easy_rec.python.feature_column.feature_column import FeatureColumnParser
 from easy_rec.python.feature_column.feature_group import FeatureGroup
+from easy_rec.python.layers import variational_dropout_layer
 from easy_rec.python.protos.feature_config_pb2 import WideOrDeep
 
 from easy_rec.python.compat.feature_column.feature_column import _SharedEmbeddingColumn  # NOQA
@@ -24,10 +25,12 @@ class InputLayer(object):
   def __init__(self,
                feature_configs,
                feature_groups_config,
+               variational_dropout_config,
                wide_output_dim=-1,
                use_embedding_variable=False,
                embedding_regularizer=None,
-               kernel_regularizer=None):
+               kernel_regularizer=None,
+               is_training=False):
     self._feature_groups = {
         x.group_name: FeatureGroup(x) for x in feature_groups_config
     }
@@ -40,6 +43,8 @@ class InputLayer(object):
 
     self._embedding_regularizer = embedding_regularizer
     self._kernel_regularizer = kernel_regularizer
+    self._is_training = is_training
+    self._variational_dropout_config = variational_dropout_config
 
   def has_group(self, group_name):
     return group_name in self._feature_groups
@@ -104,16 +109,22 @@ class InputLayer(object):
             cols_to_output_tensors[column] = seq_feature
           else:
             raise NotImplementedError
-
-      output_features = tf.concat([output_features] + seq_features, axis=-1)
+      if self._variational_dropout_config is not None:
+        variational_dropout = variational_dropout_layer.VariationalDropoutLayer(
+            self._variational_dropout_config, group_columns, self._is_training)
+        noisy_features = variational_dropout(output_features)
+        concat_features = tf.concat([noisy_features] + seq_features, axis=-1)
+      else:
+        concat_features = tf.concat([output_features] + seq_features, axis=-1)
       regularizers.apply_regularization(
           self._embedding_regularizer, weights_list=embedding_reg_lst)
 
       group_features = [cols_to_output_tensors[x] for x in group_columns] + \
-          [cols_to_output_tensors[x] for x in group_seq_columns]
-      return output_features, group_features
+                       [cols_to_output_tensors[x] for x in group_seq_columns]
+      return concat_features, group_features
+
     else:  # return sequence feature in raw format instead of combine them
-      assert len(group_columns) == 0,\
+      assert len(group_columns) == 0, \
           'there are none sequence columns: %s' % str(group_columns)
       builder = feature_column._LazyBuilder(features)
       seq_features = []

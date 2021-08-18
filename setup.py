@@ -2,9 +2,9 @@
 # Copyright (c) Alibaba, Inc. and its affiliates.
 
 import codecs
+import os
 from setuptools import find_packages
 from setuptools import setup
-import os
 
 
 def readme():
@@ -17,8 +17,8 @@ version_file = 'easy_rec/version.py'
 
 
 def get_version():
-  os.system("find easy_rec/python/protos/ -name \"*_pb2.py\" | xargs rm -rf")
-  os.system("bash -x scripts/build_read_the_docs.sh")
+  if 'BUILD_EASYREC_DOC' in os.environ:
+    os.system("bash -x scripts/build_read_the_docs.sh") 
   with codecs.open(version_file, 'r') as f:
     exec(compile(f.read(), version_file, 'exec'))
   return locals()['__version__']

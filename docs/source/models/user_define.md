@@ -1,5 +1,16 @@
 # 自定义模型
 
+### 获取EasyRec源码
+
+```bash
+git clone git@gitlab.alibaba-inc.com:pai_biz_arch/easy-rec.git
+git submodule init
+git submodule update
+python git-lfs/git_lfs.py pull
+# 运行测试用例确保通过
+sh scripts/ci_test.sh
+```
+
 ### 编写模型proto文件
 
 ```protobuf
@@ -17,11 +28,11 @@ message CustomModel {
 };
 ```
 
-#### 修改easy\_rec\_model.proto:
+#### 修改easy_rec_model.proto:
 
-easy\_rec/python/protos/easy\_rec\_model.proto:
+easy_rec/python/protos/easy_rec_model.proto:
 
-- import custom\_model.proto
+- import custom_model.proto
 - 在oneof model里面增加CustomModel
 
 ```protobuf
@@ -82,38 +93,38 @@ sh scripts/gen_proto.sh
 ```
 
 - 如果是Rank模型，则推荐继承自RankModel
-  - 可以复用RankModel的build\_predict\_graph和build\_loss\_graph
-  - 可以利用RankModel中实现的\_add\_to\_prediction\_dict把build\_predict\_graph中DNN的输出加入到self.\_prediction\_dict中，具体参考DeepFM和MultiTower的实现。
+  - 可以复用RankModel的build_predict_graph和build_loss_graph
+  - 可以利用RankModel中实现的_add_to_prediction_dict把build_predict_graph中DNN的输出加入到self.\_prediction_dict中，具体参考DeepFM和MultiTower的实现。
 
-#### 初始化函数: __init__(self, model\_config, feature\_configs, features, labels, is\_training)
+#### 初始化函数: __init__(self, model_config, feature_configs, features, labels, is_training)
 
-- model\_config: 模型配置, easy\_rec.python.protos.easy\_rec\_model\_pb2.EasyRecModel对象
-  - model\_config.custom\_model: easy\_rec.python.protos.custom\_model\_pb2.CustomModel对象，是模型特有的参数
-  - model\_config.feature\_groups: 特征组，如DeepFM包含deep组和wide组，多塔算法包含user组、item组、combo组等
-- feature\_configs: feature column配置，使用self.\_input\_layer可以获得经过feature\_column处理过的特征
+- model_config: 模型配置, easy_rec.python.protos.easy_rec_model_pb2.EasyRecModel对象
+  - model_config.custom_model: easy_rec.python.protos.custom_model_pb2.CustomModel对象，是模型特有的参数
+  - model_config.feature_groups: 特征组，如DeepFM包含deep组和wide组，多塔算法包含user组、item组、combo组等
+- feature_configs: feature column配置，使用self.\_input_layer可以获得经过feature_column处理过的特征
 - features: 原始输入
-- labels: 样本的label, 如果estimator的mode是predict或者export时, labels为None, 此时build\_loss\_graph不会被调用
-- is\_training: 是否是训练，其它状态(评估/预测)。
+- labels: 样本的label, 如果estimator的mode是predict或者export时, labels为None, 此时build_loss_graph不会被调用
+- is_training: 是否是训练，其它状态(评估/预测)。
 
-#### 前向函数: build\_predict\_graph
+#### 前向函数: build_predict_graph
 
-- 使用输入的features，使用tensorflow的函数构建深度模型，输出预测值y，预测值y放到self.\_prediction\_dict中
-- Return: self.\_prediction\_dict
+- 使用输入的features，使用tensorflow的函数构建深度模型，输出预测值y，预测值y放到self.\_prediction_dict中
+- Return: self.\_prediction_dict
 
-#### 损失函数: build\_loss\_graph
+#### 损失函数: build_loss_graph
 
-- 使用build\_predict\_graph函数中输出的预测值y和self.\_labels构建损失函数，loss tensor加入到self.\_loss\_dict
+- 使用build_predict_graph函数中输出的预测值y和self.\_labels构建损失函数，loss tensor加入到self.\_loss_dict
 - self.\_labels通常是一个tensor list，如果CustomModel继承自RankModel，那么self.\_labels是一个tensor
-- Return: self.\_loss\_dict
-- loss会被EasyRec框架记录(tf.summary), 写入model\_dir目录下的events.\*文件
+- Return: self.\_loss_dict
+- loss会被EasyRec框架记录(tf.summary), 写入model_dir目录下的events.\*文件
 
-#### 评估函数: build\_metric\_graph(self, eval\_config)
+#### 评估函数: build_metric_graph(self, eval_config)
 
-- eval\_config: easy\_rec.python.protos.eval\_pb2.EvalConfig:
-  - 一般根据其中的metric\_sets来确定要计算哪些metric
-- 使用build\_predict\_graph函数中输出的预测值y和self.\_labels构建metric op
-- Return: dict of {"metric\_name" : metric\_tensor }
-- metric会被EasyRec框架记录(tf.summary), 写入model\_dir目录下的events.\*文件
+- eval_config: easy_rec.python.protos.eval_pb2.EvalConfig:
+  - 一般根据其中的metric_sets来确定要计算哪些metric
+- 使用build_predict_graph函数中输出的预测值y和self.\_labels构建metric op
+- Return: dict of {"metric_name" : metric_tensor }
+- metric会被EasyRec框架记录(tf.summary), 写入model_dir目录下的events.\*文件
 
 ```python
 # easy_rec/python/model/custom_model.py
@@ -151,14 +162,11 @@ class CustomModel(EasyRecModel):
         """
         use feature columns to build complex features from input
         use self._input_layer to build features from feature_configs:
+        self._ctxt_features are a single tensor, where the all features are concatentated into one,
+        self._ctxt_feature_list is a list of tensors, each feature_config lead to one tensor.
         """
-        self._wide_features, _ = self._input_layer(self._feature_dict, "wide")
-        """
-        self._deep_features are a single tensor, where the all features are concatentated into one,
-        self._deep_feature_list is a list of tensors, each feature_config lead to one tensor.
-        """
-        self._deep_features, self._deep_feature_lst = self._input_layer(
-            self._feature_dict, "deep"
+        self._ctxt_features, self._ctxt_feature_lst = self._input_layer(
+            self._feature_dict, "ctxt"
         )
         self._user_features, self._user_feature_lst = self._input_layer(
             self._feature_dict, "user"
@@ -167,8 +175,8 @@ class CustomModel(EasyRecModel):
             self._feature_dict, "item"
         )
         """
-        The deep, user, item corresponds to 3 feature_groups defined in model_config.feature_groups:
-          "deep", "user", "item" are the feature_group names.
+        The ctxt, user, item corresponds to 3 feature_groups defined in model_config.feature_groups:
+          "ctxt", "user", "item" are the feature_group names.
         It is suggested to use the feature_configs to build features.
         But if the feature_configs could not satified your requirements, you can use tensorflow
         functions to process the raw inputs in features.
@@ -204,16 +212,16 @@ class CustomModel(EasyRecModel):
 
 #### Note:
 
-如果是RankModel则直接继承easy\_rec.python.model.rank\_model.RankModel，可以省略:
+如果是RankModel则直接继承easy_rec.python.model.rank_model.RankModel，可以省略:
 
-- build\_loss\_graph
-- build\_metric\_graph
+- build_loss_graph
+- build_metric_graph
 
 因为这两个函数在RankModel里面已经完成了
 
 ### 测试
 
-#### 编写samples/model\_config/custom\_model.config
+#### 编写samples/model_config/custom_model.config
 
 ```protobuf
 # 训练数据和测试文件路径, 支持多个文件，匹配规则参考glob
@@ -283,7 +291,7 @@ model_config: {
 python -m easy_rec.python.train_eval --pipeline_config_path samples/model_config/custom_model.config
 ```
 
-增加测试用例到easy\_rec/python/test/train\_eval\_test.py
+增加测试用例到easy_rec/python/test/train_eval_test.py
 
 ```python
   def test_custom_model(self):
@@ -309,8 +317,11 @@ scripts/ci_test.sh
 #### 提交代码
 
 ```shell
-git lfs track data/test/
-git add pipeline.config your_code.py
+python git-lfs/git_lfs.py add data/test/your_data_files
+python git-lfs/git_lfs.py push
+git add easy_rec/python/model/custom_model.py
+git add samples/model_config/custom_model.config
+git add easy_rec/python/protos/custom_model.proto
 git commit -a -m "add custom model"
 git push origin your_branch
 ```

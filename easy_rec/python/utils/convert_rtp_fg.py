@@ -32,7 +32,7 @@ def _gen_raw_config(feature, input_field, feature_config, is_multi,
     feature_config.embedding_dim = curr_embed_dim
   else:
     feature_config.feature_type = feature_config.RawFeature
-    input_field.default_val = '0.0'
+    input_field.default_val = feature.get('default_value', '0.0')
     raw_input_dim = feature.get('value_dimension', 1)
     if raw_input_dim > 1:
       feature_config.raw_input_dim = raw_input_dim
@@ -45,15 +45,23 @@ def _gen_raw_config(feature, input_field, feature_config, is_multi,
 
 
 def _set_hash_bucket(feature, feature_config, input_field):
+  if 'max_partitions' in feature:
+    feature_config.max_partitions = feature['max_partitions']
   if 'hash_bucket_size' in feature:
     feature_config.hash_bucket_size = feature['hash_bucket_size']
+    if feature_config.hash_bucket_size > 10000000:
+      if 'max_partitions' not in feature:
+        logging.error(
+            'it is suggested to set max_partitions > 1 for large hash buckets[%s]'
+            % feature['feature_name'])
+        sys.exit(1)
   elif 'vocab_file' in feature:
     feature_config.vocab_file = feature['vocab_file']
   elif 'vocab_list' in feature:
     feature_config.vocab_list = feature['vocab_list']
   elif 'num_buckets' in feature:
     feature_config.num_buckets = feature['num_buckets']
-    input_field.default_val = '0'
+    input_field.default_val = feature.get('default_value', '0')
   else:
     assert False, 'one of hash_bucket_size,vocab_file,vocab_list,num_buckets must be set'
 
@@ -69,7 +77,8 @@ def convert_rtp_fg(rtp_fg,
                    train_input_path=None,
                    eval_input_path=None,
                    selected_cols='',
-                   input_type='OdpsRTPInput'):
+                   input_type='OdpsRTPInput',
+                   is_async=False):
   with tf.gfile.GFile(rtp_fg, 'r') as fin:
     rtp_fg = json.load(fin)
 
@@ -182,10 +191,6 @@ def convert_rtp_fg(rtp_fg,
         _set_hash_bucket(feature, feature_config, input_field)
         feature_config.embedding_dim = curr_embed_dim
         feature_config.combiner = curr_combiner
-      elif feature_type == 'expr_feature':
-        feature_config.feature_type = feature_config.RawFeature
-        input_field.input_type = DatasetConfig.DOUBLE
-        input_field.default_val = '0.0'
       else:
         assert 'unknown feature type %s, currently not supported' % feature_type
       if 'shared_name' in feature:
@@ -213,7 +218,7 @@ def convert_rtp_fg(rtp_fg,
     train_config {
       log_step_count_steps: 200
       optimizer_config: {
-        adam_optimizer: {
+        %s: {
           learning_rate: {
             exponential_decay_learning_rate {
               initial_learning_rate: 0.0001
@@ -226,9 +231,10 @@ def convert_rtp_fg(rtp_fg,
         use_moving_average: false
       }
 
-      sync_replicas: true
+      sync_replicas: %s
     }
-    """
+    """ % ('adam_optimizer' if not is_async else 'adam_async_optimizer',
+           'true' if not is_async else 'false')
     text_format.Merge(train_config_str, pipeline_config)
 
   pipeline_config.train_config.num_steps = num_steps
@@ -356,21 +362,152 @@ def convert_rtp_fg(rtp_fg,
     """
     text_format.Merge(multi_tower_config_str, pipeline_config.model_config)
     pipeline_config.model_config.embedding_regularization = 1e-5
+
+  elif model_type == 'esmm':
+    pipeline_config.model_config.model_class = 'ESMM'
+
+    feature_groups = {}
+    for feature in rtp_features:
+      feature_name = feature['feature_name']
+      group = feature.get('group', 'all')
+      if group in feature_groups:
+        feature_groups[group].append(feature_name)
+      else:
+        feature_groups[group] = [feature_name]
+
+    for group_name in feature_groups:
+      logging.info('add group = %s' % group_name)
+      group = FeatureGroupConfig()
+      group.group_name = group_name
+      for fea_name in feature_groups[group_name]:
+        group.feature_names.append(fea_name)
+      group.wide_deep = WideOrDeep.DEEP
+      pipeline_config.model_config.feature_groups.append(group)
+
+    esmm_config_str = '  esmm {\n'
+    for group_name in feature_groups:
+      esmm_config_str += """
+        groups {
+          input: "%s"
+          dnn {
+            hidden_units: [256, 128, 96, 64]
+          }
+        }""" % group_name
+
+    esmm_config_str += """
+        ctr_tower {
+          tower_name: "ctr"
+          label_name: "%s"
+          dnn {
+            hidden_units: [128, 96, 64, 32, 16]
+          }
+          num_class: 1
+          weight: 1.0
+          loss_type: CLASSIFICATION
+          metrics_set: {
+           auc {}
+          }
+        }
+        cvr_tower {
+          tower_name: "cvr"
+          label_name: "%s"
+          dnn {
+            hidden_units: [128, 96, 64, 32, 16]
+          }
+          num_class: 1
+          weight: 1.0
+          loss_type: CLASSIFICATION
+          metrics_set: {
+           auc {}
+          }
+        }
+        l2_regularization: 1e-6
+      }""" % (label_fields[0], label_fields[1])
+    text_format.Merge(esmm_config_str, pipeline_config.model_config)
+    pipeline_config.model_config.embedding_regularization = 5e-5
+  elif model_type == 'dbmtl':
+    pipeline_config.model_config.model_class = 'DBMTL'
+
+    feature_groups = {}
+    for feature in rtp_features:
+      feature_name = feature['feature_name']
+      group = 'all'
+      if group in feature_groups:
+        feature_groups[group].append(feature_name)
+      else:
+        feature_groups[group] = [feature_name]
+
+    for group_name in feature_groups:
+      logging.info('add group = %s' % group_name)
+      group = FeatureGroupConfig()
+      group.group_name = group_name
+      for fea_name in feature_groups[group_name]:
+        group.feature_names.append(fea_name)
+      group.wide_deep = WideOrDeep.DEEP
+      pipeline_config.model_config.feature_groups.append(group)
+
+    dbmtl_config_str = """
+      dbmtl {
+        bottom_dnn {
+          hidden_units: [1024]
+        }
+        expert_dnn {
+          hidden_units: [256, 128, 64, 32]
+        }
+        num_expert: 8
+        task_towers {
+          tower_name: "ctr"
+          label_name: "%s"
+          loss_type: CLASSIFICATION
+          metrics_set: {
+            auc {}
+          }
+          dnn {
+            hidden_units: [256, 128, 64, 32]
+          }
+          relation_dnn {
+            hidden_units: [32]
+          }
+          weight: 1.0
+        }
+        task_towers {
+          tower_name: "cvr"
+          label_name: "%s"
+          loss_type: CLASSIFICATION
+          metrics_set: {
+            auc {}
+          }
+          dnn {
+            hidden_units: [256, 128, 64, 32]
+          }
+          relation_tower_names: ["ctr"]
+          relation_dnn {
+            hidden_units: [32]
+          }
+          weight: 1.0
+        }
+        l2_regularization: 1e-6
+      }
+    """ % (label_fields[0], label_fields[1])
+    text_format.Merge(dbmtl_config_str, pipeline_config.model_config)
+    pipeline_config.model_config.embedding_regularization = 5e-6
+
+  if model_type in ['wide_and_deep', 'deepfm', 'multi_tower']:
     text_format.Merge("""
-    metrics_set {
-      auc {}
-    }
-    """, pipeline_config.eval_config)
+      metrics_set {
+        auc {}
+      }
+      """, pipeline_config.eval_config)
 
   text_format.Merge(
-      """
-    export_config {
-      multi_placeholder: false
-    }
-  """, pipeline_config)
+      """ export_config {
+          multi_placeholder: false
+        }
+    """, pipeline_config)
 
   if edit_config_json:
     for edit_obj in edit_config_json:
       config_util.edit_config(pipeline_config, edit_obj)
 
+    pipeline_config.model_config.embedding_regularization = 1e-5
   return pipeline_config

@@ -56,18 +56,8 @@ EasyRec致力于成为容易上手的工业界深度学习推荐算法框架，�
 
 - Download
 ```
-  sudo yum-config-manager --add-repo http://easyrec.oss-cn-beijing.aliyuncs.com/configs/github_git-lfs.repo
-  sudo yum install git-lfs
-  git lfs install --skip-repo
-  git clone https://github.com/AlibabaPAI/EasyRec.git
-```
-
-- If the network speed to download from git-lfs server is slow:
-```
-    sudo git lfs uninstall --skip-repo
-    sudo rm -rf /etc/gitconfig
     git clone https://github.com/AlibabaPAI/EasyRec.git
-    wget https://easyrec.oss-cn-beijing.aliyuncs.com/data/easyrec_data.tar.gz
+    wget https://easyrec.oss-cn-beijing.aliyuncs.com/data/easyrec_data_20210818.tar.gz
 ```
 
 - [EasyRec Framework](https://easyrec.oss-cn-beijing.aliyuncs.com/docs/EasyRec.pptx)

@@ -13,6 +13,7 @@ from easy_rec.python.compat.feature_column import feature_column_v2 as feature_c
 
 if tf.__version__ >= '2.0':
   min_max_variable_partitioner = tf.compat.v1.min_max_variable_partitioner
+  tf = tf.compat.v1
 else:
   min_max_variable_partitioner = tf.min_max_variable_partitioner
 

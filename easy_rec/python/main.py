@@ -268,11 +268,15 @@ def _train_and_evaluate_impl(pipeline_config, continue_train=False):
 
   if pipeline_config.WhichOneof('train_path') == 'kafka_train_input':
     train_data = pipeline_config.kafka_train_input
+  elif pipeline_config.WhichOneof('train_path') == 'datahub_train_input':
+    train_data = pipeline_config.datahub_train_input
   else:
     train_data = pipeline_config.train_input_path
 
   if pipeline_config.WhichOneof('eval_path') == 'kafka_eval_input':
     eval_data = pipeline_config.kafka_eval_input
+  elif pipeline_config.WhichOneof('eval_path') == 'datahub_eval_input':
+    eval_data = pipeline_config.datahub_eval_input
   else:
     eval_data = pipeline_config.eval_input_path
 
@@ -347,9 +351,9 @@ def evaluate(pipeline_config,
   if eval_data_path is not None:
     logging.info('Evaluating on data: %s' % eval_data_path)
     if isinstance(eval_data_path, list):
-      pipeline_config.eval_data.input_path[:] = eval_data_path
+      pipeline_config.eval_input_path = ','.join(eval_data_path)
     else:
-      pipeline_config.eval_data.input_path[:] = [eval_data_path]
+      pipeline_config.eval_input_path = eval_data_path
   train_config = pipeline_config.train_config
 
   if pipeline_config.WhichOneof('eval_path') == 'kafka_eval_input':

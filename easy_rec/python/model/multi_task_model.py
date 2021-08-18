@@ -77,7 +77,7 @@ class MultiTaskModel(RankModel):
     """Build loss graph for multi task model."""
     for task_tower_cfg in self._task_towers:
       tower_name = task_tower_cfg.tower_name
-      loss_weight = task_tower_cfg.weight
+      loss_weight = task_tower_cfg.weight * self._sample_weight
 
       if hasattr(task_tower_cfg, 'task_space_indicator_label') and \
           task_tower_cfg.HasField('task_space_indicator_label'):

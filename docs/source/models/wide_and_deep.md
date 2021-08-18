@@ -44,31 +44,31 @@ model_config:{
 }
 ```
 
-- model\_class: 'WideAndDeep', 不需要修改
+- model_class: 'WideAndDeep', 不需要修改
 
-- feature\_groups:
+- feature_groups:
 
-  需要两个feature\_group: wide group和deep group, **group name不能变**
+  需要两个feature_group: wide group和deep group, **group name不能变**
 
-- wide\_and\_deep:  wide\_and\_deep 相关的参数
+- wide_and_deep:  wide_and_deep 相关的参数
 
 - dnn: deep part的参数配置
 
-  - hidden\_units: dnn每一层的channel数目，即神经元的数目
+  - hidden_units: dnn每一层的channel数目，即神经元的数目
 
-- wide\_output\_dim: wide部分输出的大小
+- wide_output_dim: wide部分输出的大小
 
-- final\_dnn: 整合wide part, deep part的参数输入, 可以选择是否使用
+- final_dnn: 整合wide part, deep part的参数输入, 可以选择是否使用
 
-  - hidden\_units: dnn每一层的channel数目，即神经元的数目
+  - hidden_units: dnn每一层的channel数目，即神经元的数目
 
-- embedding\_regularization: 对embedding部分加regularization，防止overfit
+- embedding_regularization: 对embedding部分加regularization，防止overfit
 
-- input\_type: 如果在提交到pai-tf集群上面运行，读取max compute 表作为输入数据，data\_config：input\_type要设置为OdpsInputV2。
+- input_type: 如果在提交到pai-tf集群上面运行，读取max compute 表作为输入数据，data_config：input_type要设置为OdpsInputV2。
 
 ### 示例Config
 
-[WideAndDeep\_demo.config](https://easy-rec.oss-cn-hangzhou.aliyuncs.com/config/wide_and_deep.config)
+[WideAndDeep_demo.config](https://easyrec.oss-cn-beijing.aliyuncs.com/config/wide_and_deep.config)
 
 ### 参考论文
 

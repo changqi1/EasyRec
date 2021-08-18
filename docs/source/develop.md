@@ -55,7 +55,8 @@ TEMPDIR=/tmp python -m easy_rec.python.test.odps_run --oss_config ~/.ossutilconf
 If you add new data, please do the following to commit it to git-lfs before "git commit":
 
 ```bash
-git lfs track data/test/new_data
+python git-lfs/git_lfs.py add data/test/new_data
+python git-lfs/git_lfs.py push
 ```
 
 ### Document

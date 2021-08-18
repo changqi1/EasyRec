@@ -3,7 +3,7 @@
 ### 简介
 
 Automatic Feature Interaction Learning via Self-Attentive Neural Networks（AutoInt）通过将特征都映射到相同的低维空间中，然后利用带有残差连接的 Multi-head Self-Attention 机制显示构造高阶特征，对低维空间中的特征交互进行显式建模，有效提升了CTR预估的准确率。
-注意：AutoInt 模型要求所有输入特征的 embedding\_dim 保持一致。
+注意：AutoInt 模型要求所有输入特征的 embedding_dim 保持一致。
 
 ![autoint.png](../../images/models/autoint.png)
 
@@ -43,22 +43,22 @@ model_config: {
 }
 ```
 
-- model\_class: 'AutoInt', 不需要修改
+- model_class: 'AutoInt', 不需要修改
 
-- feature\_groups: 配置一个名为'all'的feature\_group。
+- feature_groups: 配置一个名为'all'的feature_group。
 
 - autoint: autoint相关的参数
 
-  - model\_dim: 与特征的embedding\_dim保持一致
-  - multi\_head\_size: Multi-head Self-attention 中的 head size，默认为1
-  - interacting\_layer\_num: 交叉层的层数，建议设在1到5之间，默认为1
-  - l2\_regularization: L2正则，防止 overfit
+  - model_dim: 与特征的embedding_dim保持一致
+  - multi_head_size: Multi-head Self-attention 中的 head size，默认为1
+  - interacting_layer_num: 交叉层的层数，建议设在1到5之间，默认为1
+  - l2_regularization: L2正则，防止 overfit
 
-- embedding\_regularization: 对embedding部分加regularization，防止overfit
+- embedding_regularization: 对embedding部分加regularization，防止overfit
 
 ### 示例Config
 
-[AutoInt\_demo.config](https://easy-rec.oss-cn-hangzhou.aliyuncs.com/config/autoint.config)
+[AutoInt_demo.config](https://easyrec.oss-cn-beijing.aliyuncs.com/config/autoint.config)
 
 ### 参考论文
 

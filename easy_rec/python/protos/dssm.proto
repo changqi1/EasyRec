@@ -12,8 +12,10 @@ message DSSMTower {
 
 
 message DSSM {
-  required DSSMTower user_tower = 1;
-  required DSSMTower item_tower = 2;
-  required float l2_regularization = 3 [default = 1e-4];
-  optional Similarity simi_func = 4 [default=COSINE];
+    required DSSMTower user_tower = 1;
+    required DSSMTower item_tower = 2;
+    required float l2_regularization = 3 [default = 1e-4];
+    optional Similarity simi_func = 4 [default=COSINE];
+    // add a layer for scaling the similarity
+    optional bool scale_simi = 5 [default = true];
 }

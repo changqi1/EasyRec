@@ -86,7 +86,7 @@ class DBMTL(MultiTaskModel):
 
       output_logits = tf.layers.dense(
           relation_fea,
-          self._num_class,
+          task_tower_cfg.num_class,
           kernel_regularizer=self._l2_reg,
           name=tower_name + '/output')
       tower_outputs[tower_name] = output_logits

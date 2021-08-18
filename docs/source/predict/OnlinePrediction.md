@@ -1,6 +1,6 @@
 # Online Prediction
 
-使用easy\_rec提供的Predictor进行预测
+使用easy_rec提供的Predictor进行预测
 
 ### 加载模型
 

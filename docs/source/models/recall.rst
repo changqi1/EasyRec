@@ -5,4 +5,5 @@
    :maxdepth: 2
 
    dssm
+   dssm_neg_sampler
    mind

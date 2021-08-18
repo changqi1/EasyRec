@@ -83,6 +83,7 @@ class RankModel(EasyRecModel):
         self._build_loss_impl(
             self._loss_type,
             label_name=self._label_name,
+            loss_weight=self._sample_weight,
             num_class=self._num_class))
 
     # build kd loss
@@ -101,34 +102,64 @@ class RankModel(EasyRecModel):
     metric_dict = {}
     if metric.WhichOneof('metric') == 'auc':
       assert loss_type == LossType.CLASSIFICATION
-      assert num_class == 1
-      label = tf.to_int64(self._labels[label_name])
-      metric_dict['auc' + suffix] = tf.metrics.auc(
-          label, self._prediction_dict['probs' + suffix])
+      if num_class == 1:
+        label = tf.to_int64(self._labels[label_name])
+        metric_dict['auc' + suffix] = tf.metrics.auc(
+            label, self._prediction_dict['probs' + suffix])
+      elif num_class == 2:
+        label = tf.to_int64(self._labels[label_name])
+        metric_dict['auc' + suffix] = tf.metrics.auc(
+            label, self._prediction_dict['probs' + suffix][:, 1])
+      else:
+        raise ValueError('Wrong class number')
     elif metric.WhichOneof('metric') == 'gauc':
       assert loss_type == LossType.CLASSIFICATION
-      assert num_class == 1
-      label = tf.to_int64(self._labels[label_name])
-      metric_dict['gauc' + suffix] = metrics_lib.gauc(
-          label,
-          self._prediction_dict['probs' + suffix],
-          uids=self._feature_dict[metric.gauc.uid_field],
-          reduction=metric.gauc.reduction)
+      if num_class == 1:
+        label = tf.to_int64(self._labels[label_name])
+        metric_dict['gauc' + suffix] = metrics_lib.gauc(
+            label,
+            self._prediction_dict['probs' + suffix],
+            uids=self._feature_dict[metric.gauc.uid_field],
+            reduction=metric.gauc.reduction)
+      elif num_class == 2:
+        label = tf.to_int64(self._labels[label_name])
+        metric_dict['gauc' + suffix] = metrics_lib.gauc(
+            label,
+            self._prediction_dict['probs' + suffix][:, 1],
+            uids=self._feature_dict[metric.gauc.uid_field],
+            reduction=metric.gauc.reduction)
+      else:
+        raise ValueError('Wrong class number')
     elif metric.WhichOneof('metric') == 'session_auc':
       assert loss_type == LossType.CLASSIFICATION
-      assert num_class == 1
-      label = tf.to_int64(self._labels[label_name])
-      metric_dict['gauc' + suffix] = metrics_lib.session_auc(
-          label,
-          self._prediction_dict['probs' + suffix],
-          session_ids=self._feature_dict[metric.session_auc.session_id_field],
-          reduction=metric.session_auc.reduction)
+      if num_class == 1:
+        label = tf.to_int64(self._labels[label_name])
+        metric_dict['gauc' + suffix] = metrics_lib.session_auc(
+            label,
+            self._prediction_dict['probs' + suffix],
+            session_ids=self._feature_dict[metric.session_auc.session_id_field],
+            reduction=metric.session_auc.reduction)
+      elif num_class == 2:
+        label = tf.to_int64(self._labels[label_name])
+        metric_dict['gauc' + suffix] = metrics_lib.session_auc(
+            label,
+            self._prediction_dict['probs' + suffix][:, 1],
+            session_ids=self._feature_dict[metric.session_auc.session_id_field],
+            reduction=metric.session_auc.reduction)
+      else:
+        raise ValueError('Wrong class number')
     elif metric.WhichOneof('metric') == 'max_f1':
       assert loss_type == LossType.CLASSIFICATION
-      assert num_class == 1
-      label = tf.to_int64(self._labels[label_name])
-      metric_dict['f1' + suffix] = metrics_lib.max_f1(
-          label, self._prediction_dict['logits' + suffix])
+      if num_class == 1:
+        label = tf.to_int64(self._labels[label_name])
+        metric_dict['f1' + suffix] = metrics_lib.max_f1(
+            label, self._prediction_dict['logits' + suffix])
+      elif num_class == 2:
+        label = tf.to_int64(self._labels[label_name])
+        metric_dict['f1' + suffix] = metrics_lib.max_f1(
+            label, self._prediction_dict['logits' + suffix][:, 1])
+      else:
+        raise ValueError('Wrong class number')
     elif metric.WhichOneof('metric') == 'recall_at_topk':
       assert loss_type == LossType.CLASSIFICATION
       assert num_class > 1

@@ -236,6 +236,30 @@ class TrainEvalTest(tf.test.TestCase):
         'samples/model_config/dssm_on_taobao.config', self._test_dir)
     self.assertTrue(self._success)
 
+  def test_dssm_neg_sampler(self):
+    self._success = test_utils.test_single_train_eval(
+        'samples/model_config/dssm_neg_sampler_on_taobao.config',
+        self._test_dir)
+    self.assertTrue(self._success)
+
+  def test_dssm_neg_sampler_v2(self):
+    self._success = test_utils.test_single_train_eval(
+        'samples/model_config/dssm_neg_sampler_v2_on_taobao.config',
+        self._test_dir)
+    self.assertTrue(self._success)
+
+  def test_dssm_hard_neg_sampler(self):
+    self._success = test_utils.test_single_train_eval(
+        'samples/model_config/dssm_hard_neg_sampler_on_taobao.config',
+        self._test_dir)
+    self.assertTrue(self._success)
+
+  def test_dssm_hard_neg_sampler_v2(self):
+    self._success = test_utils.test_single_train_eval(
+        'samples/model_config/dssm_hard_neg_sampler_v2_on_taobao.config',
+        self._test_dir)
+    self.assertTrue(self._success)
+
   def test_dssm_no_norm(self):
     self._success = test_utils.test_single_train_eval(
         'samples/model_config/dssm_inner_prod_on_taobao.config', self._test_dir)
@@ -277,7 +301,6 @@ class TrainEvalTest(tf.test.TestCase):
             fout.write(line.strip() + ',' + pred_logits + '\n')
 
     _gen_kd_data(train_path, eval_path)
-
     pipeline_config = config_util.get_configs_from_pipeline_file(config1)
     pipeline_config.train_input_path = train_path
     pipeline_config.eval_input_path = eval_path
@@ -365,6 +388,28 @@ class TrainEvalTest(tf.test.TestCase):
         'samples/model_config/dbmtl_on_taobao.config', self._test_dir)
     self.assertTrue(self._success)
 
+  def test_dbmtl_variational_dropout(self):
+    self._success = test_utils.test_single_train_eval(
+        'samples/model_config/dbmtl_variational_dropout.config', self._test_dir)
+    self.assertTrue(self._success)
+
+  def test_dbmtl_variational_dropout_feature_num(self):
+    self._success = test_utils.test_single_train_eval(
+        'samples/model_config/dbmtl_variational_dropout_feature_num.config',
+        self._test_dir)
+    self.assertTrue(self._success)
+
+  def test_rocket_launching(self):
+    self._success = test_utils.test_single_train_eval(
+        'samples/model_config/rocket_launching.config', self._test_dir)
+    self.assertTrue(self._success)
+
+  def test_rocket_launching_feature_based(self):
+    self._success = test_utils.test_single_train_eval(
+        'samples/model_config/rocket_launching_feature_based.config',
+        self._test_dir)
+    self.assertTrue(self._success)
+
   def test_dbmtl_mmoe(self):
     self._success = test_utils.test_single_train_eval(
         'samples/model_config/dbmtl_mmoe_on_taobao.config', self._test_dir)
@@ -375,6 +420,12 @@ class TrainEvalTest(tf.test.TestCase):
         'samples/model_config/multi_tower_on_taobao.config', self._test_dir)
     self.assertTrue(self._success)
 
+  def test_train_with_ps_worker_chief_redundant(self):
+    self._success = test_utils.test_distributed_train_eval(
+        'samples/model_config/multi_tower_on_taobao_chief_redundant.config',
+        self._test_dir)
+    self.assertTrue(self._success)
+
   def test_deepfm_embed_input(self):
     self._success = test_utils.test_distributed_train_eval(
         'samples/model_config/deepfm_with_embed.config', self._test_dir)
@@ -383,6 +434,27 @@ class TrainEvalTest(tf.test.TestCase):
   def test_multi_tower_embed_input(self):
     self._success = test_utils.test_distributed_train_eval(
         'samples/model_config/multi_tower_with_embed.config', self._test_dir)
+    self.assertTrue(self._success)
+
+  def test_tfrecord_input(self):
+    self._success = test_utils.test_distributed_train_eval(
+        'samples/model_config/deepfm_on_criteo_tfrecord.config', self._test_dir)
+    self.assertTrue(self._success)
+
+  def test_batch_tfrecord_input(self):
+    self._success = test_utils.test_distributed_train_eval(
+        'samples/model_config/deepfm_on_criteo_batch_tfrecord.config',
+        self._test_dir)
+    self.assertTrue(self._success)
+
+  def test_sample_weight(self):
+    self._success = test_utils.test_single_train_eval(
+        'samples/model_config/deepfm_with_sample_weight.config', self._test_dir)
+    self.assertTrue(self._success)
+
+  def test_dssm_sample_weight(self):
+    self._success = test_utils.test_single_train_eval(
+        'samples/model_config/dssm_with_sample_weight.config', self._test_dir)
     self.assertTrue(self._success)
 
   @unittest.skipIf(

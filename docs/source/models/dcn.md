@@ -52,31 +52,31 @@ model_config: {
 }
 ```
 
-- model\_class: 'DCN', 不需要修改
+- model_class: 'DCN', 不需要修改
 
-- feature\_groups: 配置一个名为'all'的feature\_group。
+- feature_groups: 配置一个名为'all'的feature_group。
 
 - dcn: dcn相关的参数
 
-- deep\_tower
+- deep_tower
 
   - dnn: deep part的参数配置
 
-    - hidden\_units: dnn每一层的channel数目，即神经元的数目
+    - hidden_units: dnn每一层的channel数目，即神经元的数目
 
-- cross\_tower
+- cross_tower
 
-  - cross\_num: 交叉层层数，默认为3
+  - cross_num: 交叉层层数，默认为3
 
-- final\_dnn: 整合wide part, fm part, deep part的参数输入, 可以选择是否使用
+- final_dnn: 整合wide part, fm part, deep part的参数输入, 可以选择是否使用
 
-  - hidden\_units: dnn每一层的channel数目，即神经元的数目
+  - hidden_units: dnn每一层的channel数目，即神经元的数目
 
-- embedding\_regularization: 对embedding部分加regularization，防止overfit
+- embedding_regularization: 对embedding部分加regularization，防止overfit
 
 ### 示例Config
 
-[DCN\_demo.config](https://easy-rec.oss-cn-hangzhou.aliyuncs.com/config/dcn.config)
+[DCN_demo.config](https://easyrec.oss-cn-beijing.aliyuncs.com/config/dcn.config)
 
 ### 参考论文
 

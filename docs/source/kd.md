@@ -8,23 +8,23 @@
 
 ### kd
 
-- loss\_name: loss的名称, 默认是'kd\_loss\_' + pred\_name
+- loss_name: loss的名称, 默认是'kd_loss\_' + pred_name
 
-- pred\_name: 预测的名称, 对于RankModel可以是logits, probs
+- pred_name: 预测的名称, 对于RankModel可以是logits, probs
 
-  - 如果不确定，可以随便填一个，然后在报错信息中，可以查看所有的pred\_name
+  - 如果不确定，可以随便填一个，然后在报错信息中，可以查看所有的pred_name
 
-- pred\_is\_logits: 预测的是logits, 还是probs, 默认是logits
+- pred_is_logits: 预测的是logits, 还是probs, 默认是logits
 
-- soft\_label\_name: 蒸馏的目标, 对应训练数据中的某一列，该目标由teacher模型产生
+- soft_label_name: 蒸馏的目标, 对应训练数据中的某一列，该目标由teacher模型产生
 
-- label\_is\_logits: 目标是logits, 还是probs, 默认是logits
+- label_is_logits: 目标是logits, 还是probs, 默认是logits
 
-- loss\_type: loss的类型, 可以是CROSS\_ENTROPY\_LOSS或者L2\_LOSS
+- loss_type: loss的类型, 可以是CROSS_ENTROPY_LOSS或者L2_LOSS
 
-- loss\_weight: loss的权重, 默认是1.0
+- loss_weight: loss的权重, 默认是1.0
 
-- temperature: 蒸馏的温度，温度越低，student模型学到的细节越丰富, 但对于student模型的能力要求越高, 最优的温度需要通过多次试验才能确定
+- temperature: 蒸馏的温度，温度越高，student模型学到的细节越丰富, 但对于student模型的能力要求越高, 最优的温度需要通过多次试验才能确定
 
 - Note: 可以设置多个kd, 如多目标场景需要对多个预测结果进行蒸馏
 
@@ -83,7 +83,7 @@ pai -name easy_rec_ext -project algo_public
 -Dcluster='{"ps":{"count":1, "cpu":1000}, "worker" : {"count":3, "cpu":1000, "gpu":100, "memory":40000}}'
 -Darn=acs:ram::xxx:role/ev-ext-test-oss
 -Dbuckets=oss://easyrec/
--DossHost=oss-cn-shanghai-internal.aliyuncs.com
+-DossHost=oss-cn-beijing-internal.aliyuncs.com
 -Dwith_evaluator=1;
 ```
 

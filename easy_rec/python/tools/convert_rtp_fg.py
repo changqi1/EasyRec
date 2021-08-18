@@ -17,7 +17,7 @@ logging.basicConfig(
 if tf.__version__ >= '2.0':
   tf = tf.compat.v1
 
-model_types = ['deepfm', 'multi_tower', '']
+model_types = ['deepfm', 'multi_tower', 'wide_and_deep', 'esmm', 'dbmtl', '']
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument(
@@ -73,6 +73,9 @@ if __name__ == '__main__':
       type=str,
       default='OdpsRTPInput',
       help='default to OdpsRTPInput, if test local, change it to RTPInput')
+  parser.add_argument(
+      '--is_async', action='store_true', help='async mode, debug to false')
+
   args = parser.parse_args()
 
   if not args.rtp_fg:
@@ -88,7 +91,7 @@ if __name__ == '__main__':
                                    args.model_type, args.separator,
                                    args.incol_separator, args.train_input_path,
                                    args.eval_input_path, args.selected_cols,
-                                   args.input_type)
+                                   args.input_type, args.is_async)
   save_message(pipeline_config, args.output_path)
   logging.info('Conversion done.')
   logging.info('Tips:')

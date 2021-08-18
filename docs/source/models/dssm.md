@@ -48,19 +48,19 @@ model_config:{
 }
 ```
 
-- model\_class: 'DSSM', 不需要修改
-- feature\_groups: 需要两个feature\_group: user和item, **group name不能变**
-- dssm: dssm相关的参数，必须配置user\_tower和item\_tower
-- user\_tower/item\_tower:
+- model_class: 'DSSM', 不需要修改
+- feature_groups: 需要两个feature_group: user和item, **group name不能变**
+- dssm: dssm相关的参数，必须配置user_tower和item_tower
+- user_tower/item_tower:
   - dnn: deep part的参数配置
-    - hidden\_units: dnn每一层的channel数目，即神经元的数目
-  - id: 指定user\_id/item\_id列
-- simi\_func: 向量相似度函数，默认COSINE
-- embedding\_regularization: 对embedding部分加regularization，防止overfit
+    - hidden_units: dnn每一层的channel数目，即神经元的数目
+  - id: 指定user_id/item_id列
+- simi_func: 向量相似度函数，包括\[COSINE, INNER_PRODUCT, EUCLID\]，默认COSINE，建议使用INNER_PRODUCT
+- embedding_regularization: 对embedding部分加regularization，防止overfit
 
 ### 示例Config
 
-[DSSM\_demo.config](https://easy-rec.oss-cn-hangzhou.aliyuncs.com/config/dssm.config)
+[DSSM_demo.config](https://easyrec.oss-cn-beijing.aliyuncs.com/config/dssm.config)
 
 ### 效果评估
 

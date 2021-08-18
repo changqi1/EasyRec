@@ -58,7 +58,7 @@ class MMoE(MultiTaskModel):
         tower_output = task_input_list[i]
       tower_output = tf.layers.dense(
           inputs=tower_output,
-          units=self._num_class,
+          units=task_tower_cfg.num_class,
           kernel_regularizer=self._l2_reg,
           name='dnn_output_%d' % i)
 

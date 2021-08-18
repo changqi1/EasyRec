@@ -19,6 +19,7 @@ Welcome to easy_rec's documentation!
 
    feature/data
    feature/feature
+   feature/excel_config
    feature/rtp_fg
 
 .. toctree::
@@ -35,6 +36,7 @@ Welcome to easy_rec's documentation!
    :caption: TRAIN & EVAL & EXPORT
 
    train
+   incremental_train
    eval
    export
    kd
@@ -81,7 +83,8 @@ Welcome to easy_rec's documentation!
 
    reference
    faq
-
+   tf_on_yarn
+   get_role_arn
 
 
 

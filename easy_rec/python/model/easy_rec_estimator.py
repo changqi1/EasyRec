@@ -8,6 +8,7 @@ import time
 from collections import OrderedDict
 
 import tensorflow as tf
+from tensorflow.python.lib.io import file_io
 from tensorflow.python.saved_model import signature_constants
 
 from easy_rec.python.builders import optimizer_builder
@@ -74,6 +75,12 @@ class EasyRecEstimator(tf.estimator.Estimator):
       regularization_losses = tf.add_n(
           regularization_losses, name='regularization_loss')
       loss_dict['regularization_loss'] = regularization_losses
+
+    variational_dropout_loss = tf.get_collection('variational_dropout_loss')
+    if variational_dropout_loss:
+      variational_dropout_loss = tf.add_n(
+          variational_dropout_loss, name='variational_dropout_loss')
+      loss_dict['variational_dropout_loss'] = variational_dropout_loss
 
     loss = tf.add_n(list(loss_dict.values()))
     loss_dict['total_loss'] = loss
@@ -143,6 +150,8 @@ class EasyRecEstimator(tf.estimator.Estimator):
         variables=tf.trainable_variables(),
         summaries=summaries,
         colocate_gradients_with_ops=True,
+        not_apply_grad_after_first_step=run_config.is_chief and
+        self._pipeline_config.data_config.chief_redundant,
         name='')  # Preventing scope prefix on all variables.
 
     # online evaluation
@@ -171,6 +180,7 @@ class EasyRecEstimator(tf.estimator.Estimator):
           force_restore_shape_compatible=force_restore)
       if restore_hook is not None:
         hooks.append(restore_hook)
+
     # logging
     logging_dict = OrderedDict()
     logging_dict['lr'] = learning_rate[0]

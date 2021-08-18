@@ -89,6 +89,34 @@ class PredictorTest(tf.test.TestCase):
       output_res = predictor.predict(inputs, batch_size=32)
       self.assertTrue(len(output_res) == 100)
 
+  @RunAsSubprocess
+  def test_fm_pred_list(self):
+    predictor = Predictor('data/test/inference/fm_export/')
+    with open(self._test_path, 'r') as fin:
+      reader = csv.reader(fin)
+      inputs = []
+      for row in reader:
+        inputs.append(row[2:])
+      output_res = predictor.predict(inputs, batch_size=32)
+      self.assertTrue(len(output_res) == 100)
+
+  @RunAsSubprocess
+  def test_fm_pred_dict(self):
+    predictor = Predictor('data/test/inference/fm_export/')
+    field_keys = [
+        'pid', 'adgroup_id', 'cate_id', 'campaign_id', 'customer', 'brand',
+        'user_id', 'cms_segid', 'cms_group_id', 'final_gender_code',
+        'age_level', 'pvalue_level', 'shopping_level', 'occupation',
+        'new_user_class_level', 'tag_category_list', 'tag_brand_list', 'price'
+    ]
+    with open(self._test_path, 'r') as fin:
+      reader = csv.reader(fin)
+      inputs = []
+      for row in reader:
+        inputs.append({f: row[fid + 2] for fid, f in enumerate(field_keys)})
+      output_res = predictor.predict(inputs, batch_size=32)
+      self.assertTrue(len(output_res) == 100)
+
 
 class PredictorTestV2(tf.test.TestCase):
 

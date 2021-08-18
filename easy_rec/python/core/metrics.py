@@ -78,8 +78,8 @@ def _separated_auc_impl(labels, predictions, keys, reduction='mean'):
     metrics = []
     weights = []
     for key in separated_label.keys():
-      per_label = np.asarray(separated_label[key])
-      per_prediction = np.asarray(separated_prediction[key])
+      per_label = np.asarray(separated_label[key]).reshape([-1])
+      per_prediction = np.asarray(separated_prediction[key]).reshape([-1])
       if np.all(per_label == 1) or np.all(per_label == 0):
         continue
       metric = sklearn_metrics.roc_auc_score(per_label, per_prediction)

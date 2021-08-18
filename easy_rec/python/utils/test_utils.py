@@ -148,6 +148,49 @@ def _load_config_for_test(pipeline_config_path, test_dir, total_steps=50):
   return pipeline_config
 
 
+def test_datahub_train_eval(pipeline_config_path,
+                            test_dir,
+                            process_pipeline_func=None,
+                            hyperparam_str='',
+                            total_steps=50,
+                            post_check_func=None):
+  gpus = get_available_gpus()
+  if len(gpus) > 0:
+    set_gpu_id(gpus[0])
+  else:
+    set_gpu_id(None)
+
+  if not isinstance(pipeline_config_path, EasyRecConfig):
+    logging.info('testing pipeline config %s' % pipeline_config_path)
+  if 'TF_CONFIG' in os.environ:
+    del os.environ['TF_CONFIG']
+
+  if isinstance(pipeline_config_path, EasyRecConfig):
+    pipeline_config = pipeline_config_path
+  else:
+    pipeline_config = _load_config_for_test(pipeline_config_path, test_dir,
+                                            total_steps)
+
+  pipeline_config.train_config.train_distribute = 0
+  pipeline_config.train_config.num_gpus_per_worker = 1
+  pipeline_config.train_config.sync_replicas = False
+  if process_pipeline_func is not None:
+    assert callable(process_pipeline_func)
+    pipeline_config = process_pipeline_func(pipeline_config)
+  config_util.save_pipeline_config(pipeline_config, test_dir)
+  test_pipeline_config_path = os.path.join(test_dir, 'pipeline.config')
+  train_cmd = 'python3 -m easy_rec.python.train_eval --pipeline_config_path %s %s' % (
+      test_pipeline_config_path, hyperparam_str)
+  proc = run_cmd(train_cmd, '%s/log_%s.txt' % (test_dir, 'master'))
+  proc.wait()
+  if proc.returncode != 0:
+    logging.error('train %s failed' % test_pipeline_config_path)
+    return False
+  if post_check_func:
+    return post_check_func(pipeline_config)
+  return True
+
+
 def _Load_config_for_test_eval(pipeline_config_path):
   pipeline_config = config_util.get_configs_from_pipeline_file(
       pipeline_config_path)

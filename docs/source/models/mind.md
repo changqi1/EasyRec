@@ -58,32 +58,32 @@ model_config:{
 }
 ```
 
-- model\_class: 'MIND', 不需要修改
-- feature\_groups: 需要三个feature\_group: hist, user和item, **group name不能变**
-- mind: mind相关的参数，必须配置user\_dnn和item\_dnn
-- user\_dnn/item\_dnn:
+- model_class: 'MIND', 不需要修改
+- feature_groups: 需要三个feature_group: hist, user和item, **group name不能变**
+- mind: mind相关的参数，必须配置user_dnn和item_dnn
+- user_dnn/item_dnn:
   - dnn: deep part的参数配置
-    - hidden\_units: dnn每一层的channel数目，即神经元的数目
-- pre\_capsule\_dnn: 进入capsule之前的dnn的配置, 可选，配置同user\_dnn和item\_dnn
-- capsule\_config: 胶囊(动态路由)的配置
-  - max\_k: 胶囊(兴趣)的个数
-  - max\_seq\_len: hist seq的最大长度
-  - high\_dim: 兴趣向量的维度
-  - num\_iters: 动态路由(兴趣聚类)的轮数
-  - routing\_logits\_scale: routing logits 放大的超参，为0时，不放大;
+    - hidden_units: dnn每一层的channel数目，即神经元的数目
+- pre_capsule_dnn: 进入capsule之前的dnn的配置, 可选，配置同user_dnn和item_dnn
+- capsule_config: 胶囊(动态路由)的配置
+  - max_k: 胶囊(兴趣)的个数
+  - max_seq_len: hist seq的最大长度
+  - high_dim: 兴趣向量的维度
+  - num_iters: 动态路由(兴趣聚类)的轮数
+  - routing_logits_scale: routing logits 放大的超参，为0时，不放大;
     - 一些场景显示设置为20时，兴趣向量的相似度比较低(0.8左右)
     - 设置为0时，容易导致兴趣向量趋于相同(相似度接近1)，覆盖的兴趣面变窄。
-- simi\_pow: label guided attention, 对相似度做的幂指数, 更倾向于选择和label相近的兴趣向量来计算loss
-- embedding\_regularization: 对embedding部分加regularization，防止overfit
+- simi_pow: label guided attention, 对相似度做的幂指数, 更倾向于选择和label相近的兴趣向量来计算loss
+- embedding_regularization: 对embedding部分加regularization，防止overfit
 
-### time\_id, 注意特征的名字必须是time\_id
+### time_id, 注意特征的名字必须是time_id
 
-- 行为序列特征可以加上time\_id, time\_id经过1 dimension的embedding后, 在time维度进行softmax, 然后和其它sequence feature的embedding相乘
+- 行为序列特征可以加上time_id, time_id经过1 dimension的embedding后, 在time维度进行softmax, 然后和其它sequence feature的embedding相乘
 
-- 具体的 time\_id 的取值可参考:
+- 具体的 time_id 的取值可参考:
 
-  - 训练数据:  Math.round((2 \* Math.log1p((labelTime - itemTime) / 60.) / Math.log(2.))) + 1;
-  - inference: Math.round((2 \* Math.log1p((currentTime - itemTime) / 60.) / Math.log(2.))) + 1;
+  - 训练数据:  Math.round((2 * Math.log1p((labelTime - itemTime) / 60.) / Math.log(2.))) + 1;
+  - inference: Math.round((2 * Math.log1p((currentTime - itemTime) / 60.) / Math.log(2.))) + 1;
   - 此处的时间(labelTime, itemTime, currentTime) 为秒, 这里给的只是一种取法, 供参考
 
 ### 调参经验
@@ -102,11 +102,11 @@ model_config:{
 
 - 建议基于itemid、cateid、timeid的简单序列特征训练模型取得一定成效后，再添加其他侧信息，以避免不必要的试错时间。
 
-- 如果loss降不下来(一般loss要小于3), 并且是加了time\_id，那建议多跑个100/200万步，如果还是没有明显下降，这时需要检查下训练数据。
+- 如果loss降不下来(一般loss要小于3), 并且是加了time_id，那建议多跑个100/200万步，如果还是没有明显下降，这时需要检查下训练数据。
 
 ### 示例Config
 
-[MIND\_demo.config](https://easy-rec.oss-cn-hangzhou.aliyuncs.com/config/mind.config)
+[MIND_demo.config](https://easyrec.oss-cn-beijing.aliyuncs.com/config/mind.config)
 
 ### 效果评估
 

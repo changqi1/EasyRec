@@ -15,7 +15,8 @@ import "easy_rec/python/protos/dcn.proto";
 import "easy_rec/python/protos/autoint.proto";
 import "easy_rec/python/protos/mind.proto";
 import "easy_rec/python/protos/loss.proto";
-
+import "easy_rec/python/protos/rocket_launching.proto";
+import "easy_rec/python/protos/variational_dropout.proto";
 // for input performance test
 message DummyModel {
 
@@ -36,6 +37,7 @@ message KD {
   optional float loss_weight = 4 [default=1.0];
   // only for loss_type == CROSS_ENTROPY_LOSS
   optional float temperature = 5 [default=1.0];
+
 }
 
 message EasyRecModel {
@@ -61,6 +63,8 @@ message EasyRecModel {
         ESMM esmm = 302;
         DBMTL dbmtl = 303;
         SimpleMultiTask simple_multi_task = 304;
+        RocketLaunching rocket_launching = 305;
+
     }
     repeated SeqAttGroupConfig seq_att_groups = 7;
     // implemented in easy_rec/python/model/easy_rec_estimator
@@ -75,4 +79,10 @@ message EasyRecModel {
     optional bool use_embedding_variable = 11 [default=false];
 
     repeated KD kd = 12;
+
+    // filter variables matching any pattern in restore_filters
+    // common filters are Adam, Momentum, etc.
+    repeated string restore_filters = 13;
+
+    optional VariationalDropoutLayer variational_dropout = 14;
 }

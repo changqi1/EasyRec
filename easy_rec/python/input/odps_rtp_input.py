@@ -7,6 +7,11 @@ import tensorflow as tf
 
 from easy_rec.python.input.input import Input
 
+try:
+  import pai
+except Exception:
+  pass
+
 
 class OdpsRTPInput(Input):
   """RTPInput for parsing rtp fg new input format on odps.
@@ -97,12 +102,28 @@ class OdpsRTPInput(Input):
         ]))
     selected_cols = self._data_config.selected_cols \
         if self._data_config.selected_cols else None
-    dataset = tf.data.TableRecordDataset(
-        self._input_path,
-        record_defaults=record_defaults,
-        selected_cols=selected_cols,
-        slice_id=self._task_index,
-        slice_count=self._task_num)
+
+    if self._data_config.pai_worker_queue and \
+        mode == tf.estimator.ModeKeys.TRAIN:
+      logging.info('pai_worker_slice_num = %d' %
+                   self._data_config.pai_worker_slice_num)
+      work_queue = pai.data.WorkQueue(
+          self._input_path,
+          num_epochs=self.num_epochs,
+          shuffle=self._data_config.shuffle,
+          num_slices=self._data_config.pai_worker_slice_num * self._task_num)
+      que_paths = work_queue.input_dataset()
+      dataset = tf.data.TableRecordDataset(
+          que_paths,
+          record_defaults=record_defaults,
+          selected_cols=selected_cols)
+    else:
+      dataset = tf.data.TableRecordDataset(
+          self._input_path,
+          record_defaults=record_defaults,
+          selected_cols=selected_cols,
+          slice_id=self._task_index,
+          slice_count=self._task_num)
 
     if mode == tf.estimator.ModeKeys.TRAIN:
       if self._data_config.shuffle:
